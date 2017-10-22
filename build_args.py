@@ -33,7 +33,6 @@ def main():
         config['num_offspring'],
         config['parent_selection']['selection_weight'],
         config['parent_selection']['select_k'],
-        config['parent_selection']['num_mates'],
         config['parent_selection']['replacement'],
         config['parent_selection']['rate_p'],
         config['survival_selection']['selection_weight'],
@@ -48,14 +47,6 @@ def main():
         config['mutations']['adaptive'],
         config['mutations']['rate_per_offspring'],
         config['mutations']['creep_random'],
-        config['mutations']['creep_stable_random'],
-        config['mutations']['swap_position'],
-        config['mutations']['swap_insertion'],
-        config['force_valid'],
-        config['penalty_weight'],
-        config['adaptive_penalty'],
-        config['adaptive_repair'],
-        config['init_repair_chance'],
     ]
     print(' '.join(map(str, arg_parts)))
 

@@ -8,37 +8,37 @@ namespace StockCutter.EASolver
     public static class EAParentSelection<T>
     {
         public static Func<IEnumerable<EvalNode<T>>, IEnumerable<T>> CreateTournamentSelector(
-            Func<IEnumerable<T>, T> breeder,
+            Func<T, T, T> breeder,
             Func<IEnumerable<EvalNode<T>>, EvalNode<T>> tourneyWinner,
             int kCandidates,
             bool replacement,
-            int numMates,
             int numOffspring)
         {
             return (population) =>
             {
                 var selectPool = new List<EvalNode<T>>(population);
-                var parentPairs = new List<IEnumerable<T>>();
+                var parentPairs = new List<Tuple<T, T>>();
                 for (var i = 0; i < numOffspring; i++)
                 {
-                    var parentPair = new List<T>();
-                    parentPairs.Add(parentPair);
-                    for (var k = 0; k < numMates; k++)
+                    if (replacement)
                     {
-                        if (replacement)
-                        {
-                            parentPair.Add(tourneyWinner(selectPool.Choose(kCandidates)).Individual);
-                        }
-                        else
-                        {
-                            parentPair.Add(tourneyWinner(selectPool.ChooseUnique(kCandidates)).Individual);
-                        }
+                        parentPairs.Add(Tuple.Create(
+                                tourneyWinner(selectPool.Choose(kCandidates)).Individual,
+                                tourneyWinner(selectPool.Choose(kCandidates)).Individual
+                        ));
+                    }
+                    else
+                    {
+                        parentPairs.Add(Tuple.Create(
+                                tourneyWinner(selectPool.ChooseUnique(kCandidates)).Individual,
+                                tourneyWinner(selectPool.ChooseUnique(kCandidates)).Individual
+                        ));
                     }
                 }
                 var offspring = new List<T>();
-                foreach (var parents in parentPairs)
+                foreach (var parentPair in parentPairs)
                 {
-                    offspring.Add(breeder(parents));
+                    offspring.Add(breeder(parentPair.Item1, parentPair.Item2));
                 }
                 return offspring;
             };

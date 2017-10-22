@@ -51,7 +51,7 @@ namespace StockCutter
             // Solution File
             var solutionDict = new Dictionary<ShapeTemplate, ShapeCut>();
             // Best Solution might be invalid
-            BestSolution.Individual.Repair(stock, true);
+            BestSolution.Individual.Repair(stock);
             foreach (var shape in BestSolution.Individual.Phenotype())
             {
                 solutionDict[shape.Template] = shape;
@@ -76,13 +76,7 @@ namespace StockCutter
             Func<SolutionGenome, int> evaluate = (solutionGenome) =>
             {
                 evalCounter += 1;
-                var fitness = stock.Length - solutionGenome.SolutionLength;
-                if (!solutionGenome.ForceValid)
-                {
-                    var numOverlaps = solutionGenome.NumOverlaps();
-                    fitness -= (int)Math.Ceiling(solutionGenome.PenaltyWeight * numOverlaps);
-                }
-                return fitness;
+                return stock.Length - solutionGenome.SolutionLength;
             };
 
             int lastBestFitness = -1;
@@ -95,17 +89,11 @@ namespace StockCutter
                 Lazy<int> bestFitness = new Lazy<int>(() => population.MaxByValue(i => i.Fitness.Value).Fitness.Value);
                 Lazy<float> avgFitness = new Lazy<float>(() => population.Sum(i => i.Fitness.Value) / (float)population.Count());
                 generationCounter += 1;
-                Console.WriteLine("Fitness: {0}\t Mutations: {1:0.000}, {2:0.000}, {3:0.000}, {4:0.000}, {5:0.000}\tRepair: {6:0.000}\tPenalty: {7:0.000}",
+                Console.WriteLine("Fitness: {0}\t Mutations: {1:0.000}, {2:0.000}",
                     bestFitness.Value,
                     population.Sum(p => p.Individual.RatePerOffspring)/population.Count(),
-                    population.Sum(p => p.Individual.RateCreepRandom)/population.Count(),
-                    population.Sum(p => p.Individual.RateCreepStableRandom)/population.Count(),
-                    population.Sum(p => p.Individual.RateSwapPosition)/population.Count(),
-                    population.Sum(p => p.Individual.RateSwapInsertion)/population.Count(),
-                    population.Sum(p => p.Individual.RepairRate)/population.Count(),
-                    population.Sum(p => p.Individual.PenaltyWeight)/population.Count()
+                    population.Sum(p => p.Individual.RateCreepRandom)/population.Count()
                 );
-                //Console.WriteLine(population.ToList().ChooseSingle().Individual.RateStableRepair);
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;
                 bool generationLimitReached =
                     config.Termination.GenerationLimit != 0 && config.Termination.GenerationLimit <= generationCounter;
@@ -234,7 +222,6 @@ namespace StockCutter
                         (kChoices) => kChoices.ToList().ChooseSingle(),
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
-                        config.ParentSelection.NumMates,
                         config.NumOffspring
                     );
                     break;
@@ -244,7 +231,6 @@ namespace StockCutter
                         (kChoices) => kChoices.MaxByValue((k) => k.Fitness.Value),
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
-                        config.ParentSelection.NumMates,
                         config.NumOffspring
                     );
                     break;
@@ -263,7 +249,6 @@ namespace StockCutter
                         },
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
-                        config.ParentSelection.NumMates,
                         config.NumOffspring
                     );
                     break;
@@ -278,7 +263,6 @@ namespace StockCutter
                             .First().Item1,
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
-                        config.ParentSelection.NumMates,
                         config.NumOffspring
                     );
                     break;
@@ -292,38 +276,12 @@ namespace StockCutter
                 {
                     if (CmnRandom.Random.NextDouble() < individual.RatePerOffspring)
                     {
-                        var swapInsertIndexes = new List<int>();
-                        var refPoint = new Point(0, 0);
-                        var geneIndex = -1;
                         foreach (var gene in individual.Genes)
                         {
-                            geneIndex += 1;
                             if (CmnRandom.Random.NextDouble() < individual.RateCreepRandom)
                             {
-                                gene.CreepRandomize(stock.Length, refPoint);
+                                gene.CreepRandomize(stock.Length);
                             }
-                            else if (CmnRandom.Random.NextDouble() < individual.RateCreepStableRandom)
-                            {
-                                AdjacencyGene nextGene = null;
-                                if (geneIndex + 1 < individual.Genes.Count())
-                                {
-                                    nextGene = individual.Genes[geneIndex + 1];
-                                }
-                                gene.CreepStableRandomize(stock.Length, refPoint, nextGene);
-                            }
-                            else if (CmnRandom.Random.NextDouble() < individual.RateSwapPosition)
-                            {
-                                individual.SwapPosition(gene.Template, individual.Genes.Choose(1).First().Template);
-                            }
-                            else if (CmnRandom.Random.NextDouble() < individual.RateSwapInsertion)
-                            {
-                                swapInsertIndexes.Add(geneIndex);
-                            }
-                            refPoint = refPoint + gene.RelativeShift;
-                        }
-                        foreach(var index in swapInsertIndexes)
-                        {
-                            individual.SwapInsertion(individual.Genes[index].Template, individual.Genes.Choose(1).First().Template);
                         }
                         individual.Repair(stock);
                     }

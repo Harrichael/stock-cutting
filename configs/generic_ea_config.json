@@ -1,35 +1,27 @@
 {
-  "solution_file": "solutions/solution_adaptive_mutation.txt",
-  "log_file": "logs/log_adaptive_mutation.txt",
-  "runs": 30,
-  "num_parents": 35,
-  "num_offspring": 200,
-  "force_valid": true,
-  "penalty_weight": 2.4,
-  "adaptive_penalty": false,
-  "adaptive_repair": false,
-  "init_repair_chance": 0.1,
+  "solution_file": "solutions/new_solution.txt",
+  "log_file": "logs/new_log.txt",
+  "runs": 1,
+  "seed": 2,
+  "num_parents": 40,
+  "num_offspring": 40,
   "parent_selection": {
     "selection_weight": "Rank",
     "rate_p": 0.8,
     "select_k": 2,
-    "replacement": true,
-    "num_mates": 2
+    "replacement": true
   },
   "survival_selection": {
-    "selection_weight": "Rank",
-    "drop_parents": true,
+    "selection_weight": "Truncate",
+    "drop_parents": false,
     "rate_p": 1,
     "select_k": 5,
     "replacement": false
   },
   "mutations": {
     "adaptive": true,
-    "rate_per_offspring": 0.75,
-    "creep_random": 0.2,
-    "creep_stable_random": 0.5,
-    "swap_position": 0.5,
-    "swap_insertion": 0.2
+    "rate_per_offspring": 1,
+    "creep_random": 0.2
   },
   "terminations": {
     "eval_limit": 10000

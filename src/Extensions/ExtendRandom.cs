@@ -7,15 +7,6 @@ namespace StockCutter.Extensions
 {
     public static class ExtendRandom
     {
-        public static int NextBiased(this Random random, int lowBound, int upBound, int bias, int biasBound)
-        {
-            //Console.WriteLine("debug {0}, {1}, {2}", lowBound, upBound, bias);
-            bias = Math.Min(upBound, bias);
-            bias = Math.Max(lowBound, bias);
-            var value = random.NextBiased(lowBound, upBound, bias);
-            return Math.Max(Math.Min(value, bias + biasBound), bias - biasBound);
-        }
-
         public static int NextBiased(this Random random, int lowBound, int upBound, int bias)
         {
             bias = Math.Min(upBound, bias);

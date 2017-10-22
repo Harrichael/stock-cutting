@@ -21,11 +21,6 @@ namespace StockCutter
         public SurvivalSelection SurvivalSelection { get; set; }
         public Termination Termination { get; set; }
         public OffspringMutation Mutations { get; set; }
-        public bool ForceValid { get; set; }
-        public double PenaltyWeight { get; set; }
-        public bool AdaptivePenalty { get; set; }
-        public bool AdaptivePenaltyRepair { get; set; }
-        public double RepairRate { get; set; }
 
         public static EAConfig FromArguments(string[] args)
         {
@@ -43,36 +38,26 @@ namespace StockCutter
             options.ParentSelection = new ParentSelection();
             options.ParentSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[8]);
             options.ParentSelection.SelectPool = Convert.ToInt32(args[9]);
-            options.ParentSelection.NumMates = Convert.ToInt32(args[10]);
-            options.ParentSelection.Replacement = Boolean.Parse(args[11]);
-            options.ParentSelection.RateP = Convert.ToDouble(args[12]);
+            options.ParentSelection.Replacement = Boolean.Parse(args[10]);
+            options.ParentSelection.RateP = Convert.ToDouble(args[11]);
 
             options.SurvivalSelection = new SurvivalSelection();
-            options.SurvivalSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[13]);
-            options.SurvivalSelection.SelectPool = Convert.ToInt32(args[14]);
-            options.SurvivalSelection.DropParents = Boolean.Parse(args[15]);
-            options.SurvivalSelection.Replacement = Boolean.Parse(args[16]);
-            options.SurvivalSelection.RateP = Convert.ToDouble(args[17]);
+            options.SurvivalSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[12]);
+            options.SurvivalSelection.SelectPool = Convert.ToInt32(args[13]);
+            options.SurvivalSelection.DropParents = Boolean.Parse(args[14]);
+            options.SurvivalSelection.Replacement = Boolean.Parse(args[15]);
+            options.SurvivalSelection.RateP = Convert.ToDouble(args[16]);
 
             options.Termination = new Termination();
-            options.Termination.EvalLimit = Convert.ToInt32(args[18]);
-            options.Termination.GenerationLimit = Convert.ToInt32(args[19]);
-            options.Termination.UnchangedAvgGenerationLimit = Convert.ToInt32(args[20]);
-            options.Termination.UnchangedBestGenerationLimit = Convert.ToInt32(args[21]);
+            options.Termination.EvalLimit = Convert.ToInt32(args[17]);
+            options.Termination.GenerationLimit = Convert.ToInt32(args[18]);
+            options.Termination.UnchangedAvgGenerationLimit = Convert.ToInt32(args[19]);
+            options.Termination.UnchangedBestGenerationLimit = Convert.ToInt32(args[20]);
 
             options.Mutations = new OffspringMutation();
-            options.Mutations.Adaptive = Boolean.Parse(args[22]);
-            options.Mutations.RatePerOffspring = Convert.ToDouble(args[23]);
-            options.Mutations.RateCreepRandom = Convert.ToDouble(args[24]);
-            options.Mutations.RateCreepStableRandom = Convert.ToDouble(args[25]);
-            options.Mutations.RateSwapPosition = Convert.ToDouble(args[26]);
-            options.Mutations.RateSwapInsertion = Convert.ToDouble(args[27]);
-
-            options.ForceValid = Boolean.Parse(args[28]);
-            options.PenaltyWeight = Convert.ToDouble(args[29]);
-            options.AdaptivePenalty = Boolean.Parse(args[30]);
-            options.AdaptivePenaltyRepair = Boolean.Parse(args[31]);
-            options.RepairRate = Convert.ToDouble(args[32]);
+            options.Mutations.Adaptive = Boolean.Parse(args[21]);
+            options.Mutations.RatePerOffspring = Convert.ToDouble(args[22]);
+            options.Mutations.RateCreepRandom = Convert.ToDouble(args[23]);
 
             return options;
         }
