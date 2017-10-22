@@ -13,7 +13,15 @@ namespace StockCutter
     {
         public static void Main(string[] args)
         {
-            var config = EAConfig.FromArguments(args);
+            EAConfig config;
+            try
+            {
+                config = EAConfig.FromArguments(args);
+            } catch (System.FormatException)
+            {
+                Console.WriteLine(String.Join(" ", args));
+                return;
+            }
             CmnRandom.InitRandom(config.Seed);
             var problem = ProblemFile.Parse(config.ProblemFile);
             new StockCutterRunner().RunAll(config, problem.Item1, problem.Item2);
