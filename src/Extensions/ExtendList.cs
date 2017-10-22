@@ -14,14 +14,34 @@ namespace StockCutter.Extensions
             source[index2] = temp;
         }
 
-        public static IEnumerable<T> Choose<T>(this IList<T> source, int numChoices)
+        public static IEnumerable<T> Choose<T>(this IList<T> source, int numChoices, Func<T, int> weight)
         {
+            var totalWeight = source.Sum(i => weight(i));
             var choices = new List<T>();
             for (int i = 0; i < numChoices; i++)
             {
-                choices.Add(source[CmnRandom.Random.Next(0, source.Count)]);
+                var pick = CmnRandom.Random.Next(0, totalWeight - 1);
+                foreach (var item in source)
+                {
+                    pick -= weight(item);
+                    if (pick < 0)
+                    {
+                        choices.Add(item);
+                        break;
+                    }
+                }
             }
             return choices;
+        }
+
+        public static T ChooseSingle<T>(this IList<T> source, Func<T, int> weight)
+        {
+            return source.Choose(1, weight).First();
+        }
+
+        public static IEnumerable<T> Choose<T>(this IList<T> source, int numChoices)
+        {
+            return source.Choose(numChoices, ((i) => 1));
         }
 
         public static T ChooseSingle<T>(this IList<T> source)

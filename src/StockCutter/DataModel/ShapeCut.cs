@@ -22,6 +22,33 @@ namespace StockCutter.StockCutRepr
             get { return Template.TemplateAt(Rotation); }
         }
 
+        public bool Intersects(ShapeCut other)
+        {
+            var otherPoints = new HashSet<Point>(other.Points);
+            foreach (var thisPoint in Points)
+            {
+                if (otherPoints.Contains(thisPoint))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int NumOverlaps(ShapeCut other)
+        {
+            int overlaps = 0;
+            var otherPoints = new HashSet<Point>(other.Points);
+            foreach (var thisPoint in Points)
+            {
+                if (otherPoints.Contains(thisPoint))
+                {
+                    overlaps += 1;
+                }
+            }
+            return overlaps;
+        }
+
         public IEnumerable<Point> Points
         {
             get
@@ -56,12 +83,7 @@ namespace StockCutter.StockCutRepr
             var placedPoints = new List<Point>();
             foreach (var point in Points)
             {
-                if (sheet[point.X, point.Y] == null)
-                {
-                    sheet[point.X, point.Y] = item;
-                    placedPoints.Add(point);
-                }
-                else
+                if (sheet[point.X, point.Y] != null)
                 {
                     foreach (var p in placedPoints)
                     {
@@ -69,6 +91,8 @@ namespace StockCutter.StockCutRepr
                     }
                     return sheet[point.X, point.Y];
                 }
+                sheet[point.X, point.Y] = item;
+                placedPoints.Add(point);
             }
             return default(T);
         }

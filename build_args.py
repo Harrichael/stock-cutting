@@ -45,7 +45,6 @@ def main():
         config['terminations'].get('unchanged_avg_gen_limit', 0),
         config['terminations'].get('unchanged_best_gen_limit', 0),
         config['mutations']['adaptive'],
-        config['mutations']['rate_per_offspring'],
         config['mutations']['creep_random'],
     ]
     print(' '.join(map(str, arg_parts)))

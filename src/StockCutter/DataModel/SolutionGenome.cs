@@ -13,19 +13,16 @@ namespace StockCutter.StockCutRepr
     {
         public List<Gene> Genes;
         public bool AdaptiveMutation;
-        public double RatePerOffspring;
         public double RateCreepRandom;
 
         public SolutionGenome(
             IEnumerable<Gene> genes,
             bool adaptiveMutation,
-            double ratePerOffspring,
             double rateCreepRandom
         )
         {
             Genes = genes.ToList();
             AdaptiveMutation = adaptiveMutation;
-            RatePerOffspring = ratePerOffspring;
             RateCreepRandom = rateCreepRandom;
         }
 
@@ -35,7 +32,6 @@ namespace StockCutter.StockCutRepr
             return new SolutionGenome(
                 genes,
                 config.Mutations.Adaptive,
-                config.Mutations.RatePerOffspring,
                 config.Mutations.RateCreepRandom
             );
         }
@@ -58,27 +54,29 @@ namespace StockCutter.StockCutRepr
         {
             var sheet = stock.GetSheet<Gene>();
             var unPlacedGenes = Genes.ToList();
-            while (unPlacedGenes.Count > 0)
+            while (unPlacedGenes.Count() > 0)
             {
-                var gene = unPlacedGenes[0];
-                unPlacedGenes.RemoveAt(0);
+                var gene = unPlacedGenes.ChooseSingle();
                 var shape = gene.Phenotype();
                 if (!shape.IsInBounds(stock))
                 {
                     gene.CreepRandomize(stock.Length);
                     shape = gene.Phenotype();
                 }
-                // Don't remove overlaps if we have penalty on
-                while (true)
+                var conflict = shape.Place(sheet, gene);
+                if (conflict == null)
                 {
-                    var conflict = shape.Place(sheet, gene);
-                    if (conflict == null)
+                    unPlacedGenes.Remove(gene);
+                }
+                else
+                {
+                    conflict.Phenotype().UnPlace(sheet);
+                    if (conflict.Repair(sheet, stock, shape))
                     {
-                        break;
+                        conflict.Phenotype().Place(sheet, conflict);
                     }
                     else
                     {
-                        conflict.Phenotype().UnPlace(sheet);
                         conflict.CreepRandomize(stock.Length);
                         unPlacedGenes.Add(conflict);
                     }
@@ -107,7 +105,7 @@ namespace StockCutter.StockCutRepr
                 var childGenes = new List<Gene>();
                 foreach (var genePair in parent1.Genes.Zip(parent2.Genes, (first, second) => Tuple.Create(first, second)))
                 {
-                    var gene = (new List<Gene>{genePair.Item1, genePair.Item2}).ChooseSingle();
+                    var gene = (new List<Gene>{genePair.Item1, genePair.Item2}).ChooseSingle(g => stock.Length - g.Origin.X);
                     childGenes.Add(new Gene(gene.Template, gene.Origin, gene.Rotation));
                 }
 
@@ -123,7 +121,6 @@ namespace StockCutter.StockCutRepr
                 var child = new SolutionGenome(
                     childGenes,
                     parent1.AdaptiveMutation,
-                    MutateValue(new SolutionGenome[] {parent1, parent2}, (parent) => parent.RatePerOffspring),
                     MutateValue(new SolutionGenome[] {parent1, parent2}, (parent) => parent.RateCreepRandom)
                 );
                 child.Repair(stock);

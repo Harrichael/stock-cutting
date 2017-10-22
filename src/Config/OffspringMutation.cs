@@ -7,7 +7,6 @@ namespace StockCutter.Config
     public class OffspringMutation
     {
         public bool Adaptive;
-        public double RatePerOffspring;
         public double RateCreepRandom;
     }
 }

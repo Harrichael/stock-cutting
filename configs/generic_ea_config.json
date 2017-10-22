@@ -2,26 +2,25 @@
   "solution_file": "solutions/new_solution.txt",
   "log_file": "logs/new_log.txt",
   "runs": 1,
-  "seed": 2,
-  "num_parents": 40,
-  "num_offspring": 40,
+  "seed": 1,
+  "num_parents": 20,
+  "num_offspring": 140,
   "parent_selection": {
-    "selection_weight": "Rank",
+    "selection_weight": "Random",
     "rate_p": 0.8,
     "select_k": 2,
     "replacement": true
   },
   "survival_selection": {
     "selection_weight": "Truncate",
-    "drop_parents": false,
+    "drop_parents": true,
     "rate_p": 1,
     "select_k": 5,
     "replacement": false
   },
   "mutations": {
     "adaptive": true,
-    "rate_per_offspring": 1,
-    "creep_random": 0.2
+    "creep_random": 0.1
   },
   "terminations": {
     "eval_limit": 10000

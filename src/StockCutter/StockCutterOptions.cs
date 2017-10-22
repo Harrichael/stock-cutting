@@ -56,8 +56,7 @@ namespace StockCutter
 
             options.Mutations = new OffspringMutation();
             options.Mutations.Adaptive = Boolean.Parse(args[21]);
-            options.Mutations.RatePerOffspring = Convert.ToDouble(args[22]);
-            options.Mutations.RateCreepRandom = Convert.ToDouble(args[23]);
+            options.Mutations.RateCreepRandom = Convert.ToDouble(args[22]);
 
             return options;
         }

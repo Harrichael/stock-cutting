@@ -39,6 +39,37 @@ namespace StockCutter.StockCutRepr
             return new ShapeCut(Origin, Template, Rotation);
         }
 
+        static readonly int MaxRepairDistance = 12;
+        public bool Repair(Gene[,] sheet, Stock stock, ShapeCut reserved)
+        {
+            var sheetPoints = Enumerable.Range(Origin.X - MaxRepairDistance/2, Origin.X + MaxRepairDistance/2)
+                .SelectMany(x => Enumerable.Range(Origin.Y - MaxRepairDistance/2, Origin.Y + MaxRepairDistance/2).Select(y => new Point(x, y)))
+                .Where(p => p.X >= 0 && p.X < sheet.GetLength(0) && p.Y >= 0 && p.Y < sheet.GetLength(1))
+                .Where(p => sheet[p.X, p.Y] == null)
+                .Where(p => p.ManhattanDistance(Origin) <= MaxRepairDistance)
+                .OrderBy(p => p.ManhattanDistance(Origin) + p.ManhattanDistance(new Point(0, Origin.Y)))
+                .ToArray();
+            foreach(var point in sheetPoints)
+            {
+                Origin = point;
+                foreach(var rotation in Template.Rotations)
+                {
+                    Rotation = rotation;
+                    var pheno = Phenotype();
+                    if (pheno.IsInBounds(stock) && !pheno.Intersects(reserved))
+                    {
+                        var conflict = pheno.Place(sheet, this);
+                        if (conflict == null)
+                        {
+                            pheno.UnPlace(sheet);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
         public void CreepRandomize(int stockLength)
         {
             var rotations = Template.Rotations;

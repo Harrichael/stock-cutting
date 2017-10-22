@@ -15,11 +15,11 @@ namespace StockCutter
     {
         public EvalNode<SolutionGenome> BestSolution;
         public string LogFileText;
-        private List<List<Tuple<int, float, float, int>>> logFileData;
+        private List<List<Tuple<int, float, int>>> logFileData;
 
         public void RunAll(EAConfig config, Stock stock, IEnumerable<ShapeTemplate> shapes)
         {
-            logFileData = new List<List<Tuple<int, float, float, int>>>();
+            logFileData = new List<List<Tuple<int, float, int>>>();
             LogFileText = "";
             BestSolution = null;
 
@@ -42,7 +42,7 @@ namespace StockCutter
                     logFile.WriteLine("\n[Run {0}]", runCounter);
                     foreach (var data in runData)
                     {
-                        logFile.WriteLine("{0}\t{1}\t{2}\t{3}", data.Item1, data.Item2, data.Item3, data.Item4);
+                        logFile.WriteLine("{0}\t{1}\t{2}", data.Item1, data.Item2, data.Item3);
                     }
                     runCounter += 1;
                 }
@@ -50,8 +50,7 @@ namespace StockCutter
 
             // Solution File
             var solutionDict = new Dictionary<ShapeTemplate, ShapeCut>();
-            // Best Solution might be invalid
-            BestSolution.Individual.Repair(stock);
+            Console.WriteLine("Best Fitness: {0}", BestSolution.Fitness.Value);
             foreach (var shape in BestSolution.Individual.Phenotype())
             {
                 solutionDict[shape.Template] = shape;
@@ -89,9 +88,8 @@ namespace StockCutter
                 Lazy<int> bestFitness = new Lazy<int>(() => population.MaxByValue(i => i.Fitness.Value).Fitness.Value);
                 Lazy<float> avgFitness = new Lazy<float>(() => population.Sum(i => i.Fitness.Value) / (float)population.Count());
                 generationCounter += 1;
-                Console.WriteLine("Fitness: {0}\t Mutations: {1:0.000}, {2:0.000}",
+                Console.WriteLine("Fitness: {0}\t Mutations: {1:0.000}",
                     bestFitness.Value,
-                    population.Sum(p => p.Individual.RatePerOffspring)/population.Count(),
                     population.Sum(p => p.Individual.RateCreepRandom)/population.Count()
                 );
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;
@@ -274,17 +272,14 @@ namespace StockCutter
             {
                 foreach (var individual in population)
                 {
-                    if (CmnRandom.Random.NextDouble() < individual.RatePerOffspring)
+                    foreach (var gene in individual.Genes)
                     {
-                        foreach (var gene in individual.Genes)
+                        if (CmnRandom.Random.NextDouble() < individual.RateCreepRandom)
                         {
-                            if (CmnRandom.Random.NextDouble() < individual.RateCreepRandom)
-                            {
-                                gene.CreepRandomize(stock.Length);
-                            }
+                            gene.CreepRandomize(stock.Length);
                         }
-                        individual.Repair(stock);
                     }
+                    individual.Repair(stock);
                 }
             };
 
@@ -296,7 +291,7 @@ namespace StockCutter
                 evaluate,
                 terminate
             );
-            var newLogData = new List<Tuple<int, float, float, int>>();
+            var newLogData = new List<Tuple<int, float, int>>();
             foreach (var population in ea.Solve())
             {
                 var popList = new List<EvalNode<SolutionGenome>>(population);
@@ -308,7 +303,6 @@ namespace StockCutter
                 }
                 newLogData.Add(Tuple.Create(
                     evalCounter,
-                    popList.Sum(i => (float)i.Individual.RatePerOffspring)/(float)popList.Count(),
                     popList.Sum(i => i.Fitness.Value)/(float)popList.Count(),
                     bestGenSolution.Fitness.Value
                 ));
