@@ -2,14 +2,15 @@
   "solution_file": "solutions/new_solution.txt",
   "log_file": "logs/new_log.txt",
   "runs": 1,
-  "seed": 1,
   "num_parents": 20,
   "num_offspring": 140,
   "parent_selection": {
     "selection_weight": "Random",
     "rate_p": 0.8,
     "select_k": 2,
-    "replacement": true
+    "replacement": true,
+    "adaptive_crossover": true,
+    "rate_adjacency_crossover": 0.75
   },
   "survival_selection": {
     "selection_weight": "Truncate",

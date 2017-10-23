@@ -35,6 +35,8 @@ def main():
         config['parent_selection']['select_k'],
         config['parent_selection']['replacement'],
         config['parent_selection']['rate_p'],
+        config['parent_selection']['adaptive_crossover'],
+        config['parent_selection']['rate_adjacency_crossover'],
         config['survival_selection']['selection_weight'],
         config['survival_selection']['select_k'],
         config['survival_selection']['drop_parents'],

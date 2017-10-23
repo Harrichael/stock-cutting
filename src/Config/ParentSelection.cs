@@ -7,5 +7,7 @@ namespace StockCutter.Config
         public int SelectPool;
         public bool Replacement;
         public double RateP;
+        public bool AdaptiveCrossover;
+        public double RateAdjacencyCrossover;
     }
 }

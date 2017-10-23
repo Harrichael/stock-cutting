@@ -40,23 +40,25 @@ namespace StockCutter
             options.ParentSelection.SelectPool = Convert.ToInt32(args[9]);
             options.ParentSelection.Replacement = Boolean.Parse(args[10]);
             options.ParentSelection.RateP = Convert.ToDouble(args[11]);
+            options.ParentSelection.AdaptiveCrossover = Boolean.Parse(args[12]);
+            options.ParentSelection.RateAdjacencyCrossover = Convert.ToDouble(args[13]);
 
             options.SurvivalSelection = new SurvivalSelection();
-            options.SurvivalSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[12]);
-            options.SurvivalSelection.SelectPool = Convert.ToInt32(args[13]);
-            options.SurvivalSelection.DropParents = Boolean.Parse(args[14]);
-            options.SurvivalSelection.Replacement = Boolean.Parse(args[15]);
-            options.SurvivalSelection.RateP = Convert.ToDouble(args[16]);
+            options.SurvivalSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[14]);
+            options.SurvivalSelection.SelectPool = Convert.ToInt32(args[15]);
+            options.SurvivalSelection.DropParents = Boolean.Parse(args[16]);
+            options.SurvivalSelection.Replacement = Boolean.Parse(args[17]);
+            options.SurvivalSelection.RateP = Convert.ToDouble(args[18]);
 
             options.Termination = new Termination();
-            options.Termination.EvalLimit = Convert.ToInt32(args[17]);
-            options.Termination.GenerationLimit = Convert.ToInt32(args[18]);
-            options.Termination.UnchangedAvgGenerationLimit = Convert.ToInt32(args[19]);
-            options.Termination.UnchangedBestGenerationLimit = Convert.ToInt32(args[20]);
+            options.Termination.EvalLimit = Convert.ToInt32(args[19]);
+            options.Termination.GenerationLimit = Convert.ToInt32(args[20]);
+            options.Termination.UnchangedAvgGenerationLimit = Convert.ToInt32(args[21]);
+            options.Termination.UnchangedBestGenerationLimit = Convert.ToInt32(args[22]);
 
             options.Mutations = new OffspringMutation();
-            options.Mutations.Adaptive = Boolean.Parse(args[21]);
-            options.Mutations.RateCreepRandom = Convert.ToDouble(args[22]);
+            options.Mutations.Adaptive = Boolean.Parse(args[23]);
+            options.Mutations.RateCreepRandom = Convert.ToDouble(args[24]);
 
             return options;
         }
