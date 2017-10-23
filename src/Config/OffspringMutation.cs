@@ -8,5 +8,6 @@ namespace StockCutter.Config
     {
         public bool Adaptive;
         public double RateCreepRandom;
+        public double RateRotateRandom;
     }
 }

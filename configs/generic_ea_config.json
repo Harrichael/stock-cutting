@@ -10,7 +10,7 @@
     "select_k": 2,
     "replacement": true,
     "adaptive_crossover": true,
-    "rate_adjacency_crossover": 0.75
+    "rate_adjacency_crossover": 0.1
   },
   "survival_selection": {
     "selection_weight": "Truncate",
@@ -21,7 +21,8 @@
   },
   "mutations": {
     "adaptive": true,
-    "creep_random": 0.1
+    "creep_random": 0.1,
+    "rotate_random": 0.1
   },
   "terminations": {
     "eval_limit": 10000

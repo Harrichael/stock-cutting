@@ -48,6 +48,7 @@ def main():
         config['terminations'].get('unchanged_best_gen_limit', 0),
         config['mutations']['adaptive'],
         config['mutations']['creep_random'],
+        config['mutations']['rotate_random']
     ]
     print(' '.join(map(str, arg_parts)))
 

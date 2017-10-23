@@ -79,5 +79,11 @@ namespace StockCutter.StockCutRepr
             int absYVal = CmnRandom.Random.NextBiased(0 - template.MinY, template.StockWidth - template.MaxY - 1, Origin.Y);
             Origin = new Point(absXVal, absYVal);
         }
+
+        public void RotateRandom()
+        {
+            var rotations = Template.Rotations;
+            Rotation = CmnRandom.Random.NextFrom(rotations);
+        }
     }
 }

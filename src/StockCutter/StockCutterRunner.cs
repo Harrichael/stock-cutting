@@ -88,9 +88,11 @@ namespace StockCutter
                 Lazy<int> bestFitness = new Lazy<int>(() => population.MaxByValue(i => i.Fitness.Value).Fitness.Value);
                 Lazy<float> avgFitness = new Lazy<float>(() => population.Sum(i => i.Fitness.Value) / (float)population.Count());
                 generationCounter += 1;
-                Console.WriteLine("Fitness: {0}\tMutations: {1:0.000}\tCrossover: {2:0.000}",
+                Console.WriteLine("Evals {0}\tFitness: {1}\tMutations: {2:0.000} {3:0.000}\tCrossover: {4:0.000}",
+                    evalCounter,
                     bestFitness.Value,
                     population.Sum(p => p.Individual.RateCreepRandom)/population.Count(),
+                    population.Sum(p => p.Individual.RateRotateRandom)/population.Count(),
                     population.Sum(p => p.Individual.RateAdjacencyCrossover)/population.Count()
                 );
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;
@@ -278,6 +280,9 @@ namespace StockCutter
                         if (CmnRandom.Random.NextDouble() < individual.RateCreepRandom)
                         {
                             gene.CreepRandomize(stock.Length);
+                        } else if (CmnRandom.Random.NextDouble() < individual.RateRotateRandom)
+                        {
+                            gene.RotateRandom();
                         }
                     }
                     individual.Repair(stock);
