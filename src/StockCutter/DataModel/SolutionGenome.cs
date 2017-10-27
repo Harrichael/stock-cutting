@@ -17,6 +17,7 @@ namespace StockCutter.StockCutRepr
         public bool AdaptiveMutation;
         public double RateCreepRandom;
         public double RateRotateRandom;
+        public double RateSlideRandom;
 
         public SolutionGenome(
             IEnumerable<Gene> genes,
@@ -24,7 +25,8 @@ namespace StockCutter.StockCutRepr
             double rateAdjacencyCrossover,
             bool adaptiveMutation,
             double rateCreepRandom,
-            double rateRotateRandom
+            double rateRotateRandom,
+            double rateSlideRandom
         )
         {
             Genes = genes.ToList();
@@ -33,6 +35,7 @@ namespace StockCutter.StockCutRepr
             AdaptiveMutation = adaptiveMutation;
             RateCreepRandom = rateCreepRandom;
             RateRotateRandom = rateRotateRandom;
+            RateSlideRandom = rateSlideRandom;
         }
 
         public static SolutionGenome ConstructRandom(IEnumerable<ShapeTemplate> shapeTemplates, int stockLength, EAConfig config)
@@ -44,7 +47,8 @@ namespace StockCutter.StockCutRepr
                 config.ParentSelection.RateAdjacencyCrossover,
                 config.Mutations.Adaptive,
                 config.Mutations.RateCreepRandom,
-                config.Mutations.RateRotateRandom
+                config.Mutations.RateRotateRandom,
+                config.Mutations.RateSlideRandom
             );
         }
 
@@ -60,7 +64,6 @@ namespace StockCutter.StockCutRepr
         {
             return Genes.Select(g => g.Phenotype());
         }
-
 
         public void Repair(Stock stock)
         {
@@ -214,7 +217,8 @@ namespace StockCutter.StockCutRepr
                     MutateValue(parent1.AdaptiveCrossover, new SolutionGenome[] {parent1, parent2}, (parent) => parent.RateAdjacencyCrossover),
                     parent1.AdaptiveMutation,
                     MutateValue(parent1.AdaptiveMutation, new SolutionGenome[] {parent1, parent2}, (parent) => parent.RateCreepRandom),
-                    MutateValue(parent1.AdaptiveMutation, new SolutionGenome[] {parent1, parent2}, (parent) => parent.RateRotateRandom)
+                    MutateValue(parent1.AdaptiveMutation, new SolutionGenome[] {parent1, parent2}, (parent) => parent.RateRotateRandom),
+                    MutateValue(parent1.AdaptiveMutation, new SolutionGenome[] {parent1, parent2}, (parent) => parent.RateSlideRandom)
                 );
                 child.Repair(stock);
                 return child;

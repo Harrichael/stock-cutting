@@ -80,10 +80,18 @@ namespace StockCutter.StockCutRepr
             Origin = new Point(absXVal, absYVal);
         }
 
-        public void RotateRandom()
+        public void RotateRandomize()
         {
             var rotations = Template.Rotations;
             Rotation = CmnRandom.Random.NextFrom(rotations);
+        }
+
+        public void SlideRandomize(int stockLength)
+        {
+            var template = Template.TemplateAt(Rotation);
+            int absXVal = CmnRandom.Random.NextBiased(0 - template.MinX, stockLength - template.MaxX - 1, Origin.X);
+            int absYVal = CmnRandom.Random.NextBiased(0 - template.MinY, template.StockWidth - template.MaxY - 1, Origin.Y);
+            Origin = new Point(absXVal, absYVal);
         }
     }
 }
