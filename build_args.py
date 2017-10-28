@@ -50,6 +50,10 @@ def main():
         config['mutations']['creep_random'],
         config['mutations']['rotate_random'],
         config['mutations']['slide_random'],
+        config['fitness']['length'],
+        config['fitness']['width'],
+        config['fitness']['cut'],
+        config['fitness']['adjacents'],
     ]
     print(' '.join(map(str, arg_parts)))
 

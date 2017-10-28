@@ -30,9 +30,9 @@
   },
   "fitness": {
     "length": true,
-    "width": true,
+    "width": false,
     "cut": true,
-    "reverse_cut": true
+    "adjacents": true
   }
 }
 

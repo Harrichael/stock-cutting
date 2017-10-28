@@ -7,16 +7,17 @@ namespace StockCutter.EASolver
 {
     public static class EAParentSelection<T>
     {
-        public static Func<IEnumerable<EvalNode<T>>, IEnumerable<T>> CreateTournamentSelector(
+        public static Func<IEnumerable<T>, IEnumerable<T>> CreateTournamentSelector(
             Func<T, T, T> breeder,
             Func<IEnumerable<EvalNode<T>>, EvalNode<T>> tourneyWinner,
+            Func<IEnumerable<T>, IEnumerable<EvalNode<T>>> evaluate,
             int kCandidates,
             bool replacement,
             int numOffspring)
         {
             return (population) =>
             {
-                var selectPool = new List<EvalNode<T>>(population);
+                var selectPool = new List<EvalNode<T>>(evaluate(population));
                 var parentPairs = new List<Tuple<T, T>>();
                 for (var i = 0; i < numOffspring; i++)
                 {

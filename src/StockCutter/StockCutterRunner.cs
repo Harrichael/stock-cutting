@@ -13,15 +13,22 @@ namespace StockCutter
 {
     public class StockCutterRunner
     {
-        public EvalNode<SolutionGenome> BestSolution;
+        public List<SolutionGenome> BestPopulation;
+        public SolutionGenome BestSolution
+        {
+            get
+            {
+                return BestPopulation.First();
+            }
+        }
         public string LogFileText;
         private List<List<Tuple<int, float, int>>> logFileData;
+
 
         public void RunAll(EAConfig config, Stock stock, IEnumerable<ShapeTemplate> shapes)
         {
             logFileData = new List<List<Tuple<int, float, int>>>();
             LogFileText = "";
-            BestSolution = null;
 
             for (int r = 0; r < config.NumRuns; r++)
             {
@@ -50,8 +57,7 @@ namespace StockCutter
 
             // Solution File
             var solutionDict = new Dictionary<ShapeTemplate, ShapeCut>();
-            Console.WriteLine("Best Fitness: {0}", BestSolution.Fitness.Value);
-            foreach (var shape in BestSolution.Individual.Phenotype())
+            foreach (var shape in BestSolution.Phenotype())
             {
                 solutionDict[shape.Template] = shape;
             }
@@ -72,25 +78,101 @@ namespace StockCutter
                 .Select(i => GenerateRandomSolution(shapes, stock, config));
 
             int evalCounter = 0;
-            Func<SolutionGenome, int> evaluate = (solutionGenome) =>
+            Func<IEnumerable<SolutionGenome>, List<EvalNode<SolutionGenome>>> evaluate = (population) =>
             {
-                evalCounter += 1;
-                return stock.Length - solutionGenome.SolutionLength;
+                evalCounter += population.Count();
+                var popFits = new Dictionary<SolutionGenome, List<int>>();
+
+                foreach(var individual in population)
+                {
+                    popFits[individual] = new List<int>();
+                    if (config.Fitness.Length)
+                    {
+                        popFits[individual].Add(stock.Length - individual.SolutionLength);
+                    }
+
+                    if (config.Fitness.Width)
+                    {
+                        popFits[individual].Add(stock.Width - individual.SolutionWidth);
+                    }
+                }
+
+                var fittedPopulation = new List<EvalNode<SolutionGenome>>();
+                var levels = new Dictionary<SolutionGenome, int>();
+                var dominatedBy = new Dictionary<SolutionGenome, List<SolutionGenome>>();
+                if (popFits[population.First()].Count() > 1)
+                {
+                    foreach(var individual in population)
+                    {
+                        var fitnessTypes = popFits[individual];
+                        dominatedBy[individual] = new List<SolutionGenome>();
+                        foreach(var dominator in population)
+                        {
+                            var fitPairs = fitnessTypes
+                                .Zip(popFits[dominator], (i, d) => Tuple.Create(i, d));
+
+                            var ltFits = fitPairs.Where(el => el.Item1 > el.Item2);
+                            var rtFits = fitPairs.Where(el => el.Item1 < el.Item2);
+                            bool isDominated = ltFits.Count() == 0 && rtFits.Any();
+                            if (isDominated)
+                            {
+                                dominatedBy[individual].Add(dominator);
+                            }
+                        }
+                    }
+                    var unFitted = new List<SolutionGenome>(population);
+                    int levelCounter = 1;
+                    while (unFitted.Count() > 0)
+                    {
+                        foreach(var individual in unFitted.ToList())
+                        {
+                            bool fit = true;
+                            foreach(var dominator in dominatedBy[individual])
+                            {
+                                if (!levels.ContainsKey(dominator))
+                                {
+                                    fit = false;
+                                    break;
+                                }
+                            }
+                            if (fit)
+                            {
+                                levels[individual] = -levelCounter;
+                                unFitted.Remove(individual);
+                            }
+                        }
+                        levelCounter += 1;
+                    }
+                }
+                foreach(var individual in population)
+                {
+                    var fitnessTypes = popFits[individual];
+                    int fitness = 0;
+                    if (fitnessTypes.Count() == 1)
+                    {
+                        fitness = fitnessTypes.First();
+                    }
+                    else if (fitnessTypes.Count() > 1)
+                    {
+                        fitness = levels[individual];
+                    }
+                    var newFit = new EvalNode<SolutionGenome>(individual, fitness);
+                    fittedPopulation.Add(newFit);
+                }
+                return fittedPopulation;
             };
 
-            int lastBestFitness = -1;
-            float lastAvgFitness = -1;
-            int bestUnchangedGenCounter = 0;
-            int avgUnchangedGenCounter = 0;
+            var bestFitPopulation = new List<SolutionGenome>();
             int generationCounter = 0;
-            Func<IEnumerable<EvalNode<SolutionGenome>>, bool> terminate = (population) =>
+            Func<IEnumerable<SolutionGenome>, bool> terminate = (_population) =>
             {
-                Lazy<int> bestFitness = new Lazy<int>(() => population.MaxByValue(i => i.Fitness.Value).Fitness.Value);
-                Lazy<float> avgFitness = new Lazy<float>(() => population.Sum(i => i.Fitness.Value) / (float)population.Count());
                 generationCounter += 1;
-                Console.WriteLine("Evals {0}\tFitness: {1}\tMutations: {2:0.000} {3:0.000} {4:0.000}\tCrossover: {5:0.000}",
+                var population = evaluate((new []{_population, bestFitPopulation}).SelectMany(p => p));
+                int maxFitness = population.Max(i => i.Fitness);
+                bestFitPopulation = population.Where(e => e.Fitness == maxFitness).Select(e => e.Individual).ToList();
+                Console.WriteLine("Evals {0}\tLevels: {1}\tMutations: {2:0.000} {3:0.000} {4:0.000}\tCrossover: {5:0.000}",
                     evalCounter,
-                    bestFitness.Value,
+                    (new HashSet<int>(population.Select(e => e.Fitness))).Count(),
                     population.Sum(p => p.Individual.RateCreepRandom)/population.Count(),
                     population.Sum(p => p.Individual.RateRotateRandom)/population.Count(),
                     population.Sum(p => p.Individual.RateSlideRandom)/population.Count(),
@@ -99,62 +181,30 @@ namespace StockCutter
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;
                 bool generationLimitReached =
                     config.Termination.GenerationLimit != 0 && config.Termination.GenerationLimit <= generationCounter;
-                bool bestGenLimitReached = config.Termination.UnchangedBestGenerationLimit != 0;
-                if (bestGenLimitReached)
-                {
-                    bestGenLimitReached = false;
-                    if (bestFitness.Value == lastBestFitness)
-                    {
-                        bestUnchangedGenCounter += 1;
-                        if (config.Termination.UnchangedBestGenerationLimit <= bestUnchangedGenCounter)
-                        {
-                            bestGenLimitReached = true;
-                        }
-                    }
-                    else
-                    {
-                        bestUnchangedGenCounter = 0;
-                        lastBestFitness = bestFitness.Value;
-                    }
-                }
-                bool avgGenLimitReached = config.Termination.UnchangedAvgGenerationLimit != 0;
-                if (avgGenLimitReached)
-                {
-                    avgGenLimitReached = false;
-                    if (Math.Abs(avgFitness.Value - lastAvgFitness) < 0.001)
-                    {
-                        avgUnchangedGenCounter += 1;
-                        if (config.Termination.UnchangedAvgGenerationLimit <= avgUnchangedGenCounter)
-                        {
-                            avgGenLimitReached = true;
-                        }
-                    }
-                    else
-                    {
-                        avgUnchangedGenCounter = 0;
-                        lastAvgFitness = avgFitness.Value;
-                    }
-                }
-                return evalLimitReached || generationLimitReached || bestGenLimitReached || avgGenLimitReached;
+                return evalLimitReached || generationLimitReached;
             };
 
-            Func<IEnumerable<EvalNode<SolutionGenome>>,
-                 IEnumerable<EvalNode<SolutionGenome>>,
-                 IEnumerable<EvalNode<SolutionGenome>>> truncate;
+            Func<IEnumerable<SolutionGenome>,
+                 IEnumerable<SolutionGenome>,
+                 IEnumerable<SolutionGenome>> survive;
             switch (config.SurvivalSelection.SelectionWeight)
             {
                 case SelectionWeight.Truncate:
-                    truncate = (parents, offspring) =>
+                    survive = (parents, offspring) =>
                     {
-                        return new[] {parents.SkipWhile(s => config.SurvivalSelection.DropParents), offspring}
-                            .SelectMany(p => p)
-                            .OrderByDescending(o => o.Fitness.Value)
+                        return evaluate(
+                                    new[] {parents.SkipWhile(s => config.SurvivalSelection.DropParents), offspring}
+                                    .SelectMany(p => p)
+                                )
+                            .OrderByDescending(o => o.Fitness)
+                            .Select(o => o.Individual)
                             .Take(parents.Count());
                     };
                     break;
                 case SelectionWeight.Random:
-                    truncate = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
+                    survive = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
                         (kChoices) => kChoices.ToList().ChooseSingle(),
+                        evaluate,
                         config.SurvivalSelection.SelectPool,
                         config.SurvivalSelection.Replacement,
                         config.SurvivalSelection.DropParents,
@@ -162,8 +212,9 @@ namespace StockCutter
                     );
                     break;
                 case SelectionWeight.Best:
-                    truncate = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
-                        (kChoices) => kChoices.MaxByValue((k) => k.Fitness.Value),
+                    survive = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
+                        (kChoices) => kChoices.MaxByValue((k) => k.Fitness),
+                        evaluate,
                         config.SurvivalSelection.SelectPool,
                         config.SurvivalSelection.Replacement,
                         config.SurvivalSelection.DropParents,
@@ -171,17 +222,18 @@ namespace StockCutter
                     );
                     break;
                 case SelectionWeight.Fitness:
-                    truncate = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
+                    survive = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
                         (kChoices) =>
                         {
-                            var totalFitness = kChoices.Sum(k => k.Fitness.Value);
+                            var totalFitness = kChoices.Sum(k => k.Fitness);
                             var fitPick = CmnRandom.Random.Next(0, totalFitness - 1);
                             return kChoices.First( k =>
                             {
-                                fitPick -= k.Fitness.Value;
+                                fitPick -= k.Fitness;
                                 return fitPick <= 0;
                             });
                         },
+                        evaluate,
                         config.SurvivalSelection.SelectPool,
                         config.SurvivalSelection.Replacement,
                         config.SurvivalSelection.DropParents,
@@ -189,13 +241,14 @@ namespace StockCutter
                     );
                     break;
                 case SelectionWeight.Rank:
-                    truncate = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
+                    survive = EASurvivalSelection<SolutionGenome>.CreateTournamentSelector(
                         (kChoices) => kChoices
-                            .OrderBy((k) => -k.Fitness.Value)
+                            .OrderBy((k) => -k.Fitness)
                             .Select((k, index) => Tuple.Create(k, config.SurvivalSelection.RateP * Math.Pow(1 - config.SurvivalSelection.RateP, index)))
                             .Select(ki => Tuple.Create(ki.Item1, CmnRandom.Random.NextDouble() < ki.Item2))
                             .OrderBy(kp => !kp.Item2)
                             .First().Item1,
+                        evaluate,
                         config.SurvivalSelection.SelectPool,
                         config.SurvivalSelection.Replacement,
                         config.SurvivalSelection.DropParents,
@@ -206,8 +259,8 @@ namespace StockCutter
                     throw new NotImplementedException("Selection weight for survival not found");
             }
 
-            Func<IEnumerable<EvalNode<SolutionGenome>>,
-                IEnumerable<SolutionGenome>> breed;
+            Func<IEnumerable<SolutionGenome>,
+                 IEnumerable<SolutionGenome>> breed;
             switch (config.ParentSelection.SelectionWeight)
             {
                 case SelectionWeight.None:
@@ -222,6 +275,7 @@ namespace StockCutter
                     breed = EAParentSelection<SolutionGenome>.CreateTournamentSelector(
                         SolutionGenome.GetParentBreeder(stock),
                         (kChoices) => kChoices.ToList().ChooseSingle(),
+                        evaluate,
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
                         config.NumOffspring
@@ -230,7 +284,8 @@ namespace StockCutter
                 case SelectionWeight.Best:
                     breed = EAParentSelection<SolutionGenome>.CreateTournamentSelector(
                         SolutionGenome.GetParentBreeder(stock),
-                        (kChoices) => kChoices.MaxByValue((k) => k.Fitness.Value),
+                        (kChoices) => kChoices.MaxByValue((k) => k.Fitness),
+                        evaluate,
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
                         config.NumOffspring
@@ -241,14 +296,15 @@ namespace StockCutter
                         SolutionGenome.GetParentBreeder(stock),
                         (kChoices) =>
                         {
-                            var totalFitness = kChoices.Sum(k => k.Fitness.Value);
+                            var totalFitness = kChoices.Sum(k => k.Fitness);
                             var fitPick = CmnRandom.Random.Next(0, totalFitness - 1);
                             return kChoices.First( k =>
                             {
-                                fitPick -= k.Fitness.Value;
+                                fitPick -= k.Fitness;
                                 return fitPick <= 0;
                             });
                         },
+                        evaluate,
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
                         config.NumOffspring
@@ -258,11 +314,12 @@ namespace StockCutter
                     breed = EAParentSelection<SolutionGenome>.CreateTournamentSelector(
                         SolutionGenome.GetParentBreeder(stock),
                         (kChoices) => kChoices
-                            .OrderBy((k) => -k.Fitness.Value)
+                            .OrderBy((k) => -k.Fitness)
                             .Select((k, index) => Tuple.Create(k, config.ParentSelection.RateP * Math.Pow(1 - config.ParentSelection.RateP, index)))
                             .Select(ki => Tuple.Create(ki.Item1, CmnRandom.Random.NextDouble() < ki.Item2))
                             .OrderBy(kp => !kp.Item2)
                             .First().Item1,
+                        evaluate,
                         config.ParentSelection.SelectPool,
                         config.ParentSelection.Replacement,
                         config.NumOffspring
@@ -299,25 +356,17 @@ namespace StockCutter
                 initialSolutions,
                 breed,
                 mutator,
-                truncate,
-                evaluate,
+                survive,
                 terminate
             );
             var newLogData = new List<Tuple<int, float, int>>();
-            foreach (var population in ea.Solve())
+            BestPopulation = new List<SolutionGenome>();
+            foreach (var _population in ea.Solve())
             {
-                var popList = new List<EvalNode<SolutionGenome>>(population);
-                var bestGenSolution = popList.MaxByValue(i => i.Fitness.Value);
-                if ( BestSolution == null || (bestGenSolution.Fitness.Value > BestSolution.Fitness.Value)
-                        && bestGenSolution.Individual.NumOverlaps() <= BestSolution.Individual.NumOverlaps() )
-                {
-                    BestSolution = bestGenSolution;
-                }
-                newLogData.Add(Tuple.Create(
-                    evalCounter,
-                    popList.Sum(i => i.Fitness.Value)/(float)popList.Count(),
-                    bestGenSolution.Fitness.Value
-                ));
+                var population = evaluate((new []{_population, BestPopulation}).SelectMany(p => p));
+                int maxFitness = population.Max(i => i.Fitness);
+                BestPopulation = population.Where(s => s.Fitness == maxFitness).Select(s => s.Individual).ToList();
+                //newLogData.Add(new Tuple<int, float, int>(evalCounter, 0.0, 0));
             }
             logFileData.Add(newLogData);
         }

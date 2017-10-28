@@ -60,6 +60,14 @@ namespace StockCutter.StockCutRepr
             }
         }
 
+        public int SolutionWidth
+        {
+            get
+            {
+                return Phenotype().Max(sc => sc.Origin.Y + sc.ShapeTemplateRotation.MaxY);
+            }
+        }
+
         public IEnumerable<ShapeCut> Phenotype()
         {
             return Genes.Select(g => g.Phenotype());

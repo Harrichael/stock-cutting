@@ -21,6 +21,7 @@ namespace StockCutter
         public SurvivalSelection SurvivalSelection { get; set; }
         public Termination Termination { get; set; }
         public OffspringMutation Mutations { get; set; }
+        public FitnessEval Fitness { get; set; }
 
         public static EAConfig FromArguments(string[] args)
         {
@@ -61,6 +62,12 @@ namespace StockCutter
             options.Mutations.RateCreepRandom = Convert.ToDouble(args[24]);
             options.Mutations.RateRotateRandom = Convert.ToDouble(args[25]);
             options.Mutations.RateSlideRandom = Convert.ToDouble(args[26]);
+
+            options.Fitness = new FitnessEval();
+            options.Fitness.Length = Boolean.Parse(args[27]);
+            options.Fitness.Width = Boolean.Parse(args[28]);
+            options.Fitness.Cut = Boolean.Parse(args[29]);
+            options.Fitness.Adjacents = Boolean.Parse(args[30]);
 
             return options;
         }
