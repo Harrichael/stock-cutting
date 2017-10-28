@@ -58,6 +58,26 @@ namespace StockCutter.StockCutRepr
             }
         }
 
+        public IEnumerable<Point> AdjacentPoints
+        {
+            get
+            {
+                var points = new HashSet<Point>(Points);
+                return new HashSet<Point>(
+                        points
+                            .SelectMany(p => {
+                                var adjs = new List<Point>();
+                                adjs.Add(p - new Point(-1, 0));
+                                adjs.Add(p - new Point(1, 0));
+                                adjs.Add(p - new Point(0, -1));
+                                adjs.Add(p - new Point(0, 1));
+                                return adjs;
+                            })
+                            .Where(p => !points.Contains(p))
+                    ).ToList();
+            }
+        }
+
         public bool IsInBounds(Stock stock)
         {
             foreach (var point in Points)

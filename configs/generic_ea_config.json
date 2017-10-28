@@ -29,10 +29,10 @@
     "eval_limit": 10000
   },
   "fitness": {
-    "length": true,
+    "length": false,
     "width": false,
     "cut": true,
-    "adjacents": true
+    "adjacents": false
   }
 }
 

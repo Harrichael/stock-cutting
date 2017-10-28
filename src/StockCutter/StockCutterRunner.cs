@@ -81,6 +81,7 @@ namespace StockCutter
             Func<IEnumerable<SolutionGenome>, List<EvalNode<SolutionGenome>>> evaluate = (population) =>
             {
                 evalCounter += population.Count();
+
                 var popFits = new Dictionary<SolutionGenome, List<int>>();
 
                 foreach(var individual in population)
@@ -94,6 +95,49 @@ namespace StockCutter
                     if (config.Fitness.Width)
                     {
                         popFits[individual].Add(stock.Width - individual.SolutionWidth);
+                    }
+
+                    if (config.Fitness.Cut)
+                    {
+                        var placements = new Dictionary<Point, Gene>();
+                        foreach(var gene in individual.Genes)
+                        {
+                            foreach(var point in gene.Phenotype().Points)
+                            {
+                                placements[point] = gene;
+                            }
+                        }
+                        // Maximizing adjacent points is minimizing cuts
+                        popFits[individual].Add(
+                            individual.Genes.Sum( g => {
+                                return g.Phenotype().AdjacentPoints
+                                    .Where(p => placements.ContainsKey(p))
+                                    .Select(p => placements[p])
+                                    .Count();
+                            })
+                        );
+                    }
+
+                    if (config.Fitness.Adjacents)
+                    {
+                        var placements = new Dictionary<Point, Gene>();
+                        foreach(var gene in individual.Genes)
+                        {
+                            foreach(var point in gene.Phenotype().Points)
+                            {
+                                placements[point] = gene;
+                            }
+                        }
+                        // Minimize number of shapes that are adjacent to each other
+                        popFits[individual].Add(
+                            -individual.Genes.Sum( g => {
+                                return new HashSet<Gene>(
+                                    g.Phenotype().AdjacentPoints
+                                    .Where(p => placements.ContainsKey(p))
+                                    .Select(p => placements[p])
+                                ).Count();
+                            })
+                        );
                     }
                 }
 
@@ -363,7 +407,8 @@ namespace StockCutter
             BestPopulation = new List<SolutionGenome>();
             foreach (var _population in ea.Solve())
             {
-                var population = evaluate((new []{_population, BestPopulation}).SelectMany(p => p));
+                //var population = evaluate((new []{_population, BestPopulation}).SelectMany(p => p));
+                var population = evaluate((new []{_population}).SelectMany(p => p));
                 int maxFitness = population.Max(i => i.Fitness);
                 BestPopulation = population.Where(s => s.Fitness == maxFitness).Select(s => s.Individual).ToList();
                 //newLogData.Add(new Tuple<int, float, int>(evalCounter, 0.0, 0));
