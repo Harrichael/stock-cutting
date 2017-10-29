@@ -7,6 +7,7 @@
         Truncate,
         Fitness,
         Rank,
-        Random
+        Random,
+        Crowding
     }
 }

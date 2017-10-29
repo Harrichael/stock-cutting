@@ -18,6 +18,36 @@ namespace StockCutter.EASolver
         }
 
         public static Func<IEnumerable<T>, IEnumerable<T>, IEnumerable<T>>
+            CreateCrowdingSelector(
+                Func<IEnumerable<EvalNode<T>>, EvalNode<T>> tourneyWinner,
+                Func<IEnumerable<T>, IEnumerable<EvalNode<T>>> evaluate,
+                Func<T, T, int> solutionDiff,
+                int kCandidates,
+                int sizeNextGen
+            )
+        {
+            return (parents, offspring) =>
+                {
+                    var evalSolutions = evaluate((new [] {parents, offspring}).SelectMany(p => p));
+                    var evalPairs = evalSolutions
+                        .ToDictionary(e => e.Individual, e => e);
+                    var selectPool = parents.ToList();
+                    foreach(var child in offspring)
+                    {
+                        var parent = selectPool
+                            .ChooseUnique(kCandidates)
+                            .MinByValue(p => solutionDiff(p, child));
+                        if (!parent.Equals(tourneyWinner(new [] {evalPairs[parent], evalPairs[child]}).Individual))
+                        {
+                            selectPool.Add(child);
+                            selectPool.Remove(parent);
+                        }
+                    }
+                    return selectPool;
+                };
+        }
+
+        public static Func<IEnumerable<T>, IEnumerable<T>, IEnumerable<T>>
             CreateTournamentSelector(
                 Func<IEnumerable<EvalNode<T>>, EvalNode<T>> tourneyWinner,
                 Func<IEnumerable<T>, IEnumerable<EvalNode<T>>> evaluate,

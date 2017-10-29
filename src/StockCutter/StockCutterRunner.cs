@@ -354,6 +354,28 @@ namespace StockCutter
                         config.NumParents
                     );
                     break;
+                case SelectionWeight.Crowding:
+                    survive = EASurvivalSelection<SolutionGenome>.CreateCrowdingSelector(
+                        (kChoices) => { return kChoices
+                            .OrderBy((k) => -k.Fitness)
+                            .Select((k, index) => Tuple.Create(k, config.SurvivalSelection.RateP * Math.Pow(1 - config.SurvivalSelection.RateP, index)))
+                            .Select(ki => Tuple.Create(ki.Item1, CmnRandom.Random.NextDouble() < ki.Item2))
+                            .OrderBy(kp => !kp.Item2)
+                            .First().Item1;
+                         },
+                        evaluate,
+                        (sln1, sln2) => {
+                            var sln1ShapeGenes = sln1.Genes.ToDictionary(g => g.Template, g => g);
+                            var sln2ShapeGenes = sln2.Genes.ToDictionary(g => g.Template, g => g);
+                            return shapes
+                                .Select(s => Tuple.Create(sln1ShapeGenes[s], sln2ShapeGenes[s]))
+                                .Select(gp => (int)Math.Pow(gp.Item1.Origin.ManhattanDistance(gp.Item2.Origin), 2))
+                                .Sum();
+                        },
+                        config.SurvivalSelection.SelectPool,
+                        config.NumParents
+                    );
+                    break;
                 default:
                     throw new NotImplementedException("Selection weight for survival not found");
             }

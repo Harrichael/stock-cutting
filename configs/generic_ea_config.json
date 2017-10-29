@@ -2,8 +2,8 @@
   "solution_file": "solutions/new_solution.txt",
   "log_file": "logs/new_log.txt",
   "runs": 1,
-  "num_parents": 20,
-  "num_offspring": 140,
+  "num_parents": 200,
+  "num_offspring": 100,
   "solution_init": "solutions/new_solution.txt",
   "parent_selection": {
     "selection_weight": "Rank",
@@ -14,7 +14,7 @@
     "rate_adjacency_crossover": 0.15
   },
   "survival_selection": {
-    "selection_weight": "Truncate",
+    "selection_weight": "Crowding",
     "drop_parents": true,
     "rate_p": 1,
     "select_k": 5,
@@ -27,7 +27,7 @@
     "slide_random": 0.1
   },
   "terminations": {
-    "eval_limit": 20000
+    "eval_limit": 5000
   },
   "fitness": {
     "length": true,
