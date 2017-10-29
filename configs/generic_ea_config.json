@@ -2,9 +2,10 @@
   "solution_file": "solutions/new_solution.txt",
   "log_file": "logs/new_log.txt",
   "runs": 1,
-  "num_parents": 200,
-  "num_offspring": 100,
-  "solution_init": "solutions/new_solution.txt",
+  "num_parents": 20,
+  "num_offspring": 140,
+  "solution_init": "solutions/new_solution.txt_",
+  "sharing": true,
   "parent_selection": {
     "selection_weight": "Rank",
     "rate_p": 0.8,

@@ -18,6 +18,7 @@ namespace StockCutter
         public int NumParents { get; set; }
         public int NumOffspring { get; set; }
         public string SolutionInit { get; set; }
+        public bool Sharing { get; set; }
         public ParentSelection ParentSelection { get; set; }
         public SurvivalSelection SurvivalSelection { get; set; }
         public Termination Termination { get; set; }
@@ -37,38 +38,39 @@ namespace StockCutter
             options.NumParents = Convert.ToInt32(args[6]);
             options.NumOffspring = Convert.ToInt32(args[7]);
             options.SolutionInit = args[8];
+            options.Sharing = Boolean.Parse(args[9]);
 
             options.ParentSelection = new ParentSelection();
-            options.ParentSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[9]);
-            options.ParentSelection.SelectPool = Convert.ToInt32(args[10]);
-            options.ParentSelection.Replacement = Boolean.Parse(args[11]);
-            options.ParentSelection.RateP = Convert.ToDouble(args[12]);
-            options.ParentSelection.AdaptiveCrossover = Boolean.Parse(args[13]);
-            options.ParentSelection.RateAdjacencyCrossover = Convert.ToDouble(args[14]);
+            options.ParentSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[10]);
+            options.ParentSelection.SelectPool = Convert.ToInt32(args[11]);
+            options.ParentSelection.Replacement = Boolean.Parse(args[12]);
+            options.ParentSelection.RateP = Convert.ToDouble(args[13]);
+            options.ParentSelection.AdaptiveCrossover = Boolean.Parse(args[14]);
+            options.ParentSelection.RateAdjacencyCrossover = Convert.ToDouble(args[15]);
 
             options.SurvivalSelection = new SurvivalSelection();
-            options.SurvivalSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[15]);
-            options.SurvivalSelection.SelectPool = Convert.ToInt32(args[16]);
-            options.SurvivalSelection.DropParents = Boolean.Parse(args[17]);
-            options.SurvivalSelection.Replacement = Boolean.Parse(args[18]);
-            options.SurvivalSelection.RateP = Convert.ToDouble(args[19]);
+            options.SurvivalSelection.SelectionWeight = (SelectionWeight)Enum.Parse(typeof(SelectionWeight), args[16]);
+            options.SurvivalSelection.SelectPool = Convert.ToInt32(args[17]);
+            options.SurvivalSelection.DropParents = Boolean.Parse(args[18]);
+            options.SurvivalSelection.Replacement = Boolean.Parse(args[19]);
+            options.SurvivalSelection.RateP = Convert.ToDouble(args[20]);
 
             options.Termination = new Termination();
-            options.Termination.EvalLimit = Convert.ToInt32(args[20]);
-            options.Termination.GenerationLimit = Convert.ToInt32(args[21]);
-            options.Termination.UnchangedBestLimit = Convert.ToInt32(args[22]);
+            options.Termination.EvalLimit = Convert.ToInt32(args[21]);
+            options.Termination.GenerationLimit = Convert.ToInt32(args[22]);
+            options.Termination.UnchangedBestLimit = Convert.ToInt32(args[23]);
 
             options.Mutations = new OffspringMutation();
-            options.Mutations.Adaptive = Boolean.Parse(args[23]);
-            options.Mutations.RateCreepRandom = Convert.ToDouble(args[24]);
-            options.Mutations.RateRotateRandom = Convert.ToDouble(args[25]);
-            options.Mutations.RateSlideRandom = Convert.ToDouble(args[26]);
+            options.Mutations.Adaptive = Boolean.Parse(args[24]);
+            options.Mutations.RateCreepRandom = Convert.ToDouble(args[25]);
+            options.Mutations.RateRotateRandom = Convert.ToDouble(args[26]);
+            options.Mutations.RateSlideRandom = Convert.ToDouble(args[27]);
 
             options.Fitness = new FitnessEval();
-            options.Fitness.Length = Boolean.Parse(args[27]);
-            options.Fitness.Width = Boolean.Parse(args[28]);
-            options.Fitness.Cut = Boolean.Parse(args[29]);
-            options.Fitness.Adjacents = Boolean.Parse(args[30]);
+            options.Fitness.Length = Boolean.Parse(args[28]);
+            options.Fitness.Width = Boolean.Parse(args[29]);
+            options.Fitness.Cut = Boolean.Parse(args[30]);
+            options.Fitness.Adjacents = Boolean.Parse(args[31]);
 
             return options;
         }

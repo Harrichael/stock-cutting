@@ -220,6 +220,16 @@ namespace StockCutter
                     var newFit = new EvalNode<SolutionGenome>(individual, fitness);
                     fittedPopulation.Add(newFit);
                 }
+                if (config.Sharing)
+                {
+                    foreach (var eFit in fittedPopulation)
+                    {
+                        foreach (var nicheFit in fittedPopulation)
+                        {
+                            eFit.Fitness += (int)Math.Floor(nicheFit.Fitness / Math.Pow(1 + SolutionDistance(eFit.Individual, nicheFit.Individual), 2));
+                        }
+                    }
+                }
                 return fittedPopulation;
             };
 
