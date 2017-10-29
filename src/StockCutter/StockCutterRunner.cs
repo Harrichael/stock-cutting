@@ -364,14 +364,7 @@ namespace StockCutter
                             .First().Item1;
                          },
                         evaluate,
-                        (sln1, sln2) => {
-                            var sln1ShapeGenes = sln1.Genes.ToDictionary(g => g.Template, g => g);
-                            var sln2ShapeGenes = sln2.Genes.ToDictionary(g => g.Template, g => g);
-                            return shapes
-                                .Select(s => Tuple.Create(sln1ShapeGenes[s], sln2ShapeGenes[s]))
-                                .Select(gp => (int)Math.Pow(gp.Item1.Origin.ManhattanDistance(gp.Item2.Origin), 2))
-                                .Sum();
-                        },
+                        SolutionDistance,
                         config.SurvivalSelection.SelectPool,
                         config.NumParents
                     );
@@ -496,6 +489,17 @@ namespace StockCutter
                 newLogData.Add(Tuple.Create(evalCounter, avgBest.ToList()));
             }
             logFileData.Add(newLogData);
+        }
+        
+        public static int SolutionDistance(SolutionGenome sln1, SolutionGenome sln2)
+        {
+            var shapes = sln1.Genes.Select(g => g.Template);
+            var sln1ShapeGenes = sln1.Genes.ToDictionary(g => g.Template, g => g);
+            var sln2ShapeGenes = sln2.Genes.ToDictionary(g => g.Template, g => g);
+            return shapes
+                .Select(s => Tuple.Create(sln1ShapeGenes[s], sln2ShapeGenes[s]))
+                .Select(gp => (int)Math.Pow(gp.Item1.Origin.ManhattanDistance(gp.Item2.Origin), 2))
+                .Sum();
         }
 
         public static IEnumerable<SolutionGenome> ReadSolutions(string solutionFile, List<ShapeTemplate> shapes, Stock stock, EAConfig config)
