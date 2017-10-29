@@ -33,7 +33,7 @@ namespace StockCutter
             using(var logFile = new StreamWriter(config.LogFile, false))
             {
                 int runCounter = 0;
-                logFile.WriteLine("[Config Log]");
+                logFile.WriteLine("[Config Log (seed = {0})]", config.Seed);
                 logFile.WriteLine(File.ReadAllText(config.ConfigFile));
 
                 logFile.WriteLine("\n\n[Results Log]");
@@ -76,9 +76,20 @@ namespace StockCutter
 
         public void Run(EAConfig config, Stock stock, IEnumerable<ShapeTemplate> shapes)
         {
-            var initialSolutions = Enumerable
-                .Range(0, config.NumParents)
-                .Select(i => GenerateRandomSolution(shapes, stock, config));
+            var initialSolutions = new List<SolutionGenome>();
+
+            if (config.SolutionInit != "" && File.Exists(config.SolutionInit))
+            {
+                initialSolutions = ReadSolutions(config.SolutionInit, shapes.ToList(), stock, config).ToList();
+            }
+
+            if (initialSolutions.Count() < config.NumParents)
+            {
+                initialSolutions.AddRange(Enumerable
+                    .Range(initialSolutions.Count(), config.NumParents)
+                    .Select(i => GenerateRandomSolution(shapes, stock, config))
+                    .ToList());
+            }
 
             int evalCounter = 0;
             Func<SolutionGenome, List<int>> evaluateSolution = (individual) =>
@@ -109,7 +120,6 @@ namespace StockCutter
                         individual.Genes.Sum( g => {
                             return g.Phenotype().AdjacentPoints
                                 .Where(p => placements.ContainsKey(p))
-                                .Select(p => placements[p])
                                 .Count();
                         })
                     );
@@ -125,9 +135,9 @@ namespace StockCutter
                             placements[point] = gene;
                         }
                     }
-                    // Minimize number of shapes that are adjacent to each other
+                    // Minimize number of shapes that are adjacent to each other, also, keep it positive
                     evals.Add(
-                        -individual.Genes.Sum( g => {
+                        (individual.Genes.Count() * individual.Genes.Count())-individual.Genes.Sum( g => {
                             return new HashSet<Gene>(
                                 g.Phenotype().AdjacentPoints
                                 .Where(p => placements.ContainsKey(p))
@@ -221,9 +231,16 @@ namespace StockCutter
             {
                 generationCounter += 1;
 
-                var _evalPopulation = evaluate((new []{population, BestPopulation}).SelectMany(p => p)).ToList();
+                var _evalPopulation = evaluate((new []{population, BestPopulation}).SelectMany(p => p))
+                    .ToList();
                 int maxFitness = _evalPopulation.Max(i => i.Fitness);
-                var evalPopulation = _evalPopulation.Where(s => s.Fitness == maxFitness).ToList();
+                // We need this unique population handling to prevent best pop bloat in moea
+                var uniquePops = new Dictionary<string, EvalNode<SolutionGenome>>();
+                foreach (var e in _evalPopulation.Where(s => s.Fitness == maxFitness))
+                {
+                    uniquePops[String.Join(",", e.Individual.Genes.SelectMany(g => g.Phenotype().Points))] = e;
+                }
+                var evalPopulation = uniquePops.Values.ToList();
 
                 bool isNewBest = true;
                 foreach (var newBest in population)
@@ -457,6 +474,41 @@ namespace StockCutter
                 newLogData.Add(Tuple.Create(evalCounter, avgBest.ToList()));
             }
             logFileData.Add(newLogData);
+        }
+
+        public static IEnumerable<SolutionGenome> ReadSolutions(string solutionFile, List<ShapeTemplate> shapes, Stock stock, EAConfig config)
+        {
+            using(var solFile = new StreamReader(solutionFile, false))
+            {
+                List<Gene> genes = null;
+                int shapeCounter = 0;
+                string line;
+                while((line = solFile.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    if (line.Contains("[Solution]"))
+                    {
+                        if (genes != null && genes.Any())
+                        {
+                            yield return SolutionGenome.ConstructConfig(genes, stock.Length, config);
+                        }
+                        genes = new List<Gene>();
+                        shapeCounter = 0;
+                    }
+                    else if (line != "" && genes != null)
+                    {
+                        var lineData = line.Split(new [] {','}).Select(num => Convert.ToInt32(num)).ToList();
+                        var point = new Point(lineData[0], lineData[1]);
+                        var rotation = (ClockwiseRotation)(lineData[2]);
+                        genes.Add(new Gene(shapes[shapeCounter], point, rotation));
+                        shapeCounter += 1;
+                    }
+                }
+                if (genes != null && genes.Any())
+                {
+                    yield return SolutionGenome.ConstructConfig(genes, stock.Length, config);
+                }
+            }
         }
 
         public static SolutionGenome GenerateRandomSolution(IEnumerable<ShapeTemplate> shapes, Stock stock, EAConfig config)

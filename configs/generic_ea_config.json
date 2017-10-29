@@ -4,6 +4,7 @@
   "runs": 1,
   "num_parents": 20,
   "num_offspring": 140,
+  "solution_init": "",
   "parent_selection": {
     "selection_weight": "Random",
     "rate_p": 0.8,

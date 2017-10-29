@@ -38,9 +38,8 @@ namespace StockCutter.StockCutRepr
             RateSlideRandom = rateSlideRandom;
         }
 
-        public static SolutionGenome ConstructRandom(IEnumerable<ShapeTemplate> shapeTemplates, int stockLength, EAConfig config)
+        public static SolutionGenome ConstructConfig(IEnumerable<Gene> genes, int stockLength, EAConfig config)
         {
-            var genes = shapeTemplates.Select(s => Gene.ConstructRandom(s, stockLength));
             return new SolutionGenome(
                 genes,
                 config.ParentSelection.AdaptiveCrossover,
@@ -50,6 +49,12 @@ namespace StockCutter.StockCutRepr
                 config.Mutations.RateRotateRandom,
                 config.Mutations.RateSlideRandom
             );
+        }
+
+        public static SolutionGenome ConstructRandom(IEnumerable<ShapeTemplate> shapeTemplates, int stockLength, EAConfig config)
+        {
+            var genes = shapeTemplates.Select(s => Gene.ConstructRandom(s, stockLength));
+            return ConstructConfig(genes, stockLength, config);
         }
 
         public int SolutionLength

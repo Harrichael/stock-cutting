@@ -31,6 +31,7 @@ def main():
         config['runs'],
         config['num_parents'],
         config['num_offspring'],
+        config['solution_init'] or '""',
         config['parent_selection']['selection_weight'],
         config['parent_selection']['select_k'],
         config['parent_selection']['replacement'],
