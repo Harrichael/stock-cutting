@@ -15,7 +15,7 @@
     "rate_adjacency_crossover": 0.15
   },
   "survival_selection": {
-    "selection_weight": "Truncation",
+    "selection_weight": "Truncate",
     "drop_parents": true,
     "rate_p": 1,
     "select_k": 5,
