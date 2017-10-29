@@ -4,7 +4,7 @@
   "runs": 1,
   "num_parents": 20,
   "num_offspring": 140,
-  "solution_init": "",
+  "solution_init": "solutions/new_solution.txt",
   "parent_selection": {
     "selection_weight": "Random",
     "rate_p": 0.8,
@@ -28,7 +28,7 @@
   },
   "terminations": {
     "eval_limit": 2500,
-    "unchanged_best_limit": 2
+    "unchanged_best_limit": 4
   },
   "fitness": {
     "length": true,

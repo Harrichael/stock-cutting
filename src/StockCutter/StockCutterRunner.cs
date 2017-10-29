@@ -238,14 +238,15 @@ namespace StockCutter
                 var uniquePops = new Dictionary<string, EvalNode<SolutionGenome>>();
                 foreach (var e in _evalPopulation.Where(s => s.Fitness == maxFitness))
                 {
-                    uniquePops[String.Join(",", e.Individual.Genes.SelectMany(g => g.Phenotype().Points))] = e;
+                    uniquePops[String.Join(",", evaluateSolution(e.Individual))] = e;
                 }
                 var evalPopulation = uniquePops.Values.ToList();
 
                 bool isNewBest = true;
-                foreach (var newBest in population)
+                var bestUniquePops = BestPopulation.ToDictionary(i => String.Join(",", evaluateSolution(i)), i => i);
+                foreach (var newBest in evalPopulation)
                 {
-                    if (!BestPopulation.Contains(newBest))
+                    if (!bestUniquePops.ContainsKey(String.Join(",", evaluateSolution(newBest.Individual))))
                     {
                         isNewBest = false;
                         unchangedBest = 0;
