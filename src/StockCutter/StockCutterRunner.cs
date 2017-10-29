@@ -80,15 +80,14 @@ namespace StockCutter
 
             if (config.SolutionInit != "" && File.Exists(config.SolutionInit))
             {
-                initialSolutions = ReadSolutions(config.SolutionInit, shapes.ToList(), stock, config).ToList();
+                initialSolutions.AddRange(ReadSolutions(config.SolutionInit, shapes.ToList(), stock, config));
             }
-
-            if (initialSolutions.Count() < config.NumParents)
+            else
             {
                 initialSolutions.AddRange(Enumerable
                     .Range(initialSolutions.Count(), config.NumParents)
                     .Select(i => GenerateRandomSolution(shapes, stock, config))
-                    .ToList());
+                );
             }
 
             int evalCounter = 0;
@@ -262,19 +261,19 @@ namespace StockCutter
                 Console.WriteLine("Evals {0}\tLevels: {1}\tAvg Fitness: {2}\tBest Fitnesss {3}\tMutations: {4:0.000} {5:0.000} {6:0.000}\tCrossover: {7:0.000}",
                     evalCounter,
                     (new HashSet<int>(_evalPopulation.Select(e => e.Fitness))).Count(),
-                    String.Join(",", BestPopulation
+                    String.Join(",", population
                         .Select(s => evaluateSolution(s))
                         .Aggregate(new List<int>{0, 0, 0, 0}, (lhs, rhs) => lhs.Zip(rhs, (l, r) => l + r).ToList())
-                        .Select(total => String.Format("{0:0.000}", total / (double)BestPopulation.Count))
+                        .Select(total => String.Format("{0:0.000}", total / (double)population.Count()))
                     ),
-                    String.Join(",", BestPopulation
+                    String.Join(",", population
                         .Select(s => evaluateSolution(s))
                         .Aggregate(new List<int>{0, 0, 0, 0}, (lhs, rhs) => lhs.Zip(rhs, (l, r) => Math.Max(l, r)).ToList())
                     ),
-                    BestPopulation.Sum(p => p.RateCreepRandom)        / BestPopulation.Count(),
-                    BestPopulation.Sum(p => p.RateRotateRandom)       / BestPopulation.Count(),
-                    BestPopulation.Sum(p => p.RateSlideRandom)        / BestPopulation.Count(),
-                    BestPopulation.Sum(p => p.RateAdjacencyCrossover) / BestPopulation.Count()
+                    population.Sum(p => p.RateCreepRandom)        / population.Count(),
+                    population.Sum(p => p.RateRotateRandom)       / population.Count(),
+                    population.Sum(p => p.RateSlideRandom)        / population.Count(),
+                    population.Sum(p => p.RateAdjacencyCrossover) / population.Count()
                 );
 
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;

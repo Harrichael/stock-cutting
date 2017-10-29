@@ -6,9 +6,9 @@
   "num_offspring": 140,
   "solution_init": "solutions/new_solution.txt",
   "parent_selection": {
-    "selection_weight": "Random",
+    "selection_weight": "Rank",
     "rate_p": 0.8,
-    "select_k": 2,
+    "select_k": 3,
     "replacement": true,
     "adaptive_crossover": true,
     "rate_adjacency_crossover": 0.15
@@ -27,8 +27,7 @@
     "slide_random": 0.1
   },
   "terminations": {
-    "eval_limit": 2500,
-    "unchanged_best_limit": 4
+    "eval_limit": 20000
   },
   "fitness": {
     "length": true,
