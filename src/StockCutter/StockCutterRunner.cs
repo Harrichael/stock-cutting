@@ -14,13 +14,6 @@ namespace StockCutter
     public class StockCutterRunner
     {
         public List<SolutionGenome> BestPopulation;
-        public SolutionGenome BestSolution
-        {
-            get
-            {
-                return BestPopulation.First();
-            }
-        }
         public string LogFileText;
         private List<List<Tuple<int, float, int>>> logFileData;
 
@@ -56,17 +49,26 @@ namespace StockCutter
             }
 
             // Solution File
-            var solutionDict = new Dictionary<ShapeTemplate, ShapeCut>();
-            foreach (var shape in BestSolution.Phenotype())
+            var solutions = new List<Dictionary<ShapeTemplate, ShapeCut>>();
+            foreach (var bestSolution in BestPopulation)
             {
-                solutionDict[shape.Template] = shape;
+                var solutionDict = new Dictionary<ShapeTemplate, ShapeCut>();
+                solutions.Add(solutionDict);
+                foreach (var shape in bestSolution.Phenotype())
+                {
+                    solutionDict[shape.Template] = shape;
+                }
             }
             using(var solutionFile = new StreamWriter(config.SolutionFile, false))
             {
-                foreach (var shapeTempl in shapes)
+                foreach (var solutionDict in solutions)
                 {
-                    var shape = solutionDict[shapeTempl];
-                    solutionFile.WriteLine("{0},{1},{2}", shape.Origin.X, shape.Origin.Y, (int)shape.Rotation);
+                    solutionFile.WriteLine("\n[Solution]\n");
+                    foreach (var shapeTempl in shapes)
+                    {
+                        var shape = solutionDict[shapeTempl];
+                        solutionFile.WriteLine("{0},{1},{2}", shape.Origin.X, shape.Origin.Y, (int)shape.Rotation);
+                    }
                 }
             }
         }
@@ -407,8 +409,7 @@ namespace StockCutter
             BestPopulation = new List<SolutionGenome>();
             foreach (var _population in ea.Solve())
             {
-                //var population = evaluate((new []{_population, BestPopulation}).SelectMany(p => p));
-                var population = evaluate((new []{_population}).SelectMany(p => p));
+                var population = evaluate((new []{_population, BestPopulation}).SelectMany(p => p));
                 int maxFitness = population.Max(i => i.Fitness);
                 BestPopulation = population.Where(s => s.Fitness == maxFitness).Select(s => s.Individual).ToList();
                 //newLogData.Add(new Tuple<int, float, int>(evalCounter, 0.0, 0));

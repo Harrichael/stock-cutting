@@ -32,7 +32,7 @@
     "length": false,
     "width": false,
     "cut": true,
-    "adjacents": false
+    "adjacents": true
   }
 }
 
