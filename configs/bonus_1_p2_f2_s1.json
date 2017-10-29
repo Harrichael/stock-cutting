@@ -1,11 +1,11 @@
 {
-  "solution_file": "solutions/new_solution.txt",
-  "log_file": "logs/new_log.txt",
-  "runs": 1,
+  "solution_file": "solutions/bonus_1_p2_f2_s1.txt",
+  "log_file": "logs/bonus_1_p2_f2_s1.txt",
+  "runs": 30,
   "num_parents": 20,
   "num_offspring": 140,
-  "solution_init": "solutions/new_solution.txt_",
-  "sharing": true,
+  "solution_init": "",
+  "sharing": false,
   "parent_selection": {
     "selection_weight": "Random",
     "rate_p": 0.8,
@@ -15,7 +15,7 @@
     "rate_adjacency_crossover": 0.15
   },
   "survival_selection": {
-    "selection_weight": "Crowding",
+    "selection_weight": "Truncation",
     "drop_parents": true,
     "rate_p": 1,
     "select_k": 5,
@@ -28,13 +28,13 @@
     "slide_random": 0.1
   },
   "terminations": {
-    "eval_limit": 5000
+    "eval_limit": 10000
   },
   "fitness": {
     "length": true,
     "width": false,
-    "cut": true,
-    "adjacents": false
+    "cut": false,
+    "adjacents": true
   }
 }
 

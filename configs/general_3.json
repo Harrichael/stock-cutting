@@ -1,0 +1,40 @@
+{
+  "solution_file": "solutions/general_3.txt",
+  "log_file": "logs/general_3.txt",
+  "runs": 30,
+  "num_parents": 20,
+  "num_offspring": 140,
+  "solution_init": "",
+  "sharing": false,
+  "parent_selection": {
+    "selection_weight": "Random",
+    "rate_p": 0.8,
+    "select_k": 3,
+    "replacement": true,
+    "adaptive_crossover": true,
+    "rate_adjacency_crossover": 0.15
+  },
+  "survival_selection": {
+    "selection_weight": "Truncation",
+    "drop_parents": true,
+    "rate_p": 1,
+    "select_k": 5,
+    "replacement": false
+  },
+  "mutations": {
+    "adaptive": true,
+    "creep_random": 0.1,
+    "rotate_random": 0.1,
+    "slide_random": 0.1
+  },
+  "terminations": {
+    "eval_limit": 10000
+  },
+  "fitness": {
+    "length": true,
+    "width": true,
+    "cut": false,
+    "adjacents": false
+  }
+}
+
