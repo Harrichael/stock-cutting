@@ -7,7 +7,7 @@
   "solution_init": "solutions/new_solution.txt_",
   "sharing": true,
   "parent_selection": {
-    "selection_weight": "Rank",
+    "selection_weight": "Random",
     "rate_p": 0.8,
     "select_k": 3,
     "replacement": true,
