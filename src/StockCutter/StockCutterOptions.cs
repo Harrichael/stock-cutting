@@ -54,20 +54,19 @@ namespace StockCutter
             options.Termination = new Termination();
             options.Termination.EvalLimit = Convert.ToInt32(args[19]);
             options.Termination.GenerationLimit = Convert.ToInt32(args[20]);
-            options.Termination.UnchangedAvgGenerationLimit = Convert.ToInt32(args[21]);
-            options.Termination.UnchangedBestGenerationLimit = Convert.ToInt32(args[22]);
+            options.Termination.UnchangedBestLimit = Convert.ToInt32(args[21]);
 
             options.Mutations = new OffspringMutation();
-            options.Mutations.Adaptive = Boolean.Parse(args[23]);
-            options.Mutations.RateCreepRandom = Convert.ToDouble(args[24]);
-            options.Mutations.RateRotateRandom = Convert.ToDouble(args[25]);
-            options.Mutations.RateSlideRandom = Convert.ToDouble(args[26]);
+            options.Mutations.Adaptive = Boolean.Parse(args[22]);
+            options.Mutations.RateCreepRandom = Convert.ToDouble(args[23]);
+            options.Mutations.RateRotateRandom = Convert.ToDouble(args[24]);
+            options.Mutations.RateSlideRandom = Convert.ToDouble(args[25]);
 
             options.Fitness = new FitnessEval();
-            options.Fitness.Length = Boolean.Parse(args[27]);
-            options.Fitness.Width = Boolean.Parse(args[28]);
-            options.Fitness.Cut = Boolean.Parse(args[29]);
-            options.Fitness.Adjacents = Boolean.Parse(args[30]);
+            options.Fitness.Length = Boolean.Parse(args[26]);
+            options.Fitness.Width = Boolean.Parse(args[27]);
+            options.Fitness.Cut = Boolean.Parse(args[28]);
+            options.Fitness.Adjacents = Boolean.Parse(args[29]);
 
             return options;
         }

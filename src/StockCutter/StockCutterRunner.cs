@@ -208,26 +208,47 @@ namespace StockCutter
                 return fittedPopulation;
             };
 
-            var bestFitPopulation = new List<SolutionGenome>();
+            BestPopulation = new List<SolutionGenome>();
+            int unchangedBest = 0;
             int generationCounter = 0;
-            Func<IEnumerable<SolutionGenome>, bool> terminate = (_population) =>
+            Func<IEnumerable<SolutionGenome>, bool> terminate = (population) =>
             {
                 generationCounter += 1;
-                var population = evaluate((new []{_population, bestFitPopulation}).SelectMany(p => p));
-                int maxFitness = population.Max(i => i.Fitness);
-                bestFitPopulation = population.Where(e => e.Fitness == maxFitness).Select(e => e.Individual).ToList();
+
+                var _evalPopulation = evaluate((new []{population, BestPopulation}).SelectMany(p => p)).ToList();
+                int maxFitness = _evalPopulation.Max(i => i.Fitness);
+                var evalPopulation = _evalPopulation.Where(s => s.Fitness == maxFitness).ToList();
+
+                bool isNewBest = true;
+                foreach (var newBest in population)
+                {
+                    if (!BestPopulation.Contains(newBest))
+                    {
+                        isNewBest = false;
+                        unchangedBest = 0;
+                        break;
+                    }
+                }
+                BestPopulation = evalPopulation.Select(e => e.Individual).ToList();
+                if (isNewBest)
+                {
+                    unchangedBest += 1;
+                }
+
                 Console.WriteLine("Evals {0}\tLevels: {1}\tMutations: {2:0.000} {3:0.000} {4:0.000}\tCrossover: {5:0.000}",
                     evalCounter,
-                    (new HashSet<int>(population.Select(e => e.Fitness))).Count(),
-                    population.Sum(p => p.Individual.RateCreepRandom)/population.Count(),
-                    population.Sum(p => p.Individual.RateRotateRandom)/population.Count(),
-                    population.Sum(p => p.Individual.RateSlideRandom)/population.Count(),
-                    population.Sum(p => p.Individual.RateAdjacencyCrossover)/population.Count()
+                    (new HashSet<int>(_evalPopulation.Select(e => e.Fitness))).Count(),
+                    BestPopulation.Sum(p => p.RateCreepRandom)        / BestPopulation.Count(),
+                    BestPopulation.Sum(p => p.RateRotateRandom)       / BestPopulation.Count(),
+                    BestPopulation.Sum(p => p.RateSlideRandom)        / BestPopulation.Count(),
+                    BestPopulation.Sum(p => p.RateAdjacencyCrossover) / BestPopulation.Count()
                 );
+
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;
                 bool generationLimitReached =
                     config.Termination.GenerationLimit != 0 && config.Termination.GenerationLimit <= generationCounter;
-                return evalLimitReached || generationLimitReached;
+                bool unchangedBestReached = config.Termination.UnchangedBestLimit != 0 && config.Termination.UnchangedBestLimit <= unchangedBest;
+                return evalLimitReached || generationLimitReached || unchangedBestReached;
             };
 
             Func<IEnumerable<SolutionGenome>,
@@ -406,12 +427,8 @@ namespace StockCutter
                 terminate
             );
             var newLogData = new List<Tuple<int, float, int>>();
-            BestPopulation = new List<SolutionGenome>();
             foreach (var _population in ea.Solve())
             {
-                var population = evaluate((new []{_population, BestPopulation}).SelectMany(p => p));
-                int maxFitness = population.Max(i => i.Fitness);
-                BestPopulation = population.Where(s => s.Fitness == maxFitness).Select(s => s.Individual).ToList();
                 //newLogData.Add(new Tuple<int, float, int>(evalCounter, 0.0, 0));
             }
             logFileData.Add(newLogData);

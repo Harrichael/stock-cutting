@@ -5,7 +5,6 @@ namespace StockCutter.Config
     {
         public int EvalLimit;
         public int GenerationLimit;
-        public int UnchangedAvgGenerationLimit;
-        public int UnchangedBestGenerationLimit;
+        public int UnchangedBestLimit;
     }
 }

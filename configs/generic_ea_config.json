@@ -26,13 +26,14 @@
     "slide_random": 0.1
   },
   "terminations": {
-    "eval_limit": 10000
+    "eval_limit": 10000,
+    "unchanged_best_limit": 4
   },
   "fitness": {
-    "length": false,
+    "length": true,
     "width": false,
     "cut": true,
-    "adjacents": true
+    "adjacents": false
   }
 }
 
