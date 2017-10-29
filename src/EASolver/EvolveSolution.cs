@@ -43,14 +43,14 @@ namespace StockCutter.EASolver
         public IEnumerable<IEnumerable<T>> Solve()
         {
             var population = InitPopulation.ToList();
-            yield return population;
             while (!Terminate(population))
             {
+                yield return population;
                 var offspring = Breed(population);
                 Mutator(offspring);
                 population = SelectSurvivors(population, offspring).ToList();
-                yield return population;
             }
+            yield return population;
         }
     }
 }

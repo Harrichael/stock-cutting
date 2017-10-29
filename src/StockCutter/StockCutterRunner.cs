@@ -15,12 +15,12 @@ namespace StockCutter
     {
         public List<SolutionGenome> BestPopulation;
         public string LogFileText;
-        private List<List<Tuple<int, float, int>>> logFileData;
+        private List<List<Tuple<int, List<double>>>> logFileData;
 
 
         public void RunAll(EAConfig config, Stock stock, IEnumerable<ShapeTemplate> shapes)
         {
-            logFileData = new List<List<Tuple<int, float, int>>>();
+            logFileData = new List<List<Tuple<int, List<double>>>>();
             LogFileText = "";
 
             for (int r = 0; r < config.NumRuns; r++)
@@ -42,7 +42,7 @@ namespace StockCutter
                     logFile.WriteLine("\n[Run {0}]", runCounter);
                     foreach (var data in runData)
                     {
-                        logFile.WriteLine("{0}\t{1}\t{2}", data.Item1, data.Item2, data.Item3);
+                        logFile.WriteLine("{0}\t{1}", data.Item1, String.Join("\t", data.Item2));
                     }
                     runCounter += 1;
                 }
@@ -61,6 +61,7 @@ namespace StockCutter
             }
             using(var solutionFile = new StreamWriter(config.SolutionFile, false))
             {
+                solutionFile.WriteLine(solutions.Count());
                 foreach (var solutionDict in solutions)
                 {
                     solutionFile.WriteLine("\n[Solution]\n");
@@ -80,6 +81,63 @@ namespace StockCutter
                 .Select(i => GenerateRandomSolution(shapes, stock, config));
 
             int evalCounter = 0;
+            Func<SolutionGenome, List<int>> evaluateSolution = (individual) =>
+            {
+                var evals = new List<int>();
+                if (config.Fitness.Length)
+                {
+                    evals.Add(stock.Length - individual.SolutionLength);
+                }
+
+                if (config.Fitness.Width)
+                {
+                    evals.Add(stock.Width - individual.SolutionWidth);
+                }
+
+                if (config.Fitness.Cut)
+                {
+                    var placements = new Dictionary<Point, Gene>();
+                    foreach(var gene in individual.Genes)
+                    {
+                        foreach(var point in gene.Phenotype().Points)
+                        {
+                            placements[point] = gene;
+                        }
+                    }
+                    // Maximizing adjacent points is minimizing cuts
+                    evals.Add(
+                        individual.Genes.Sum( g => {
+                            return g.Phenotype().AdjacentPoints
+                                .Where(p => placements.ContainsKey(p))
+                                .Select(p => placements[p])
+                                .Count();
+                        })
+                    );
+                }
+
+                if (config.Fitness.Adjacents)
+                {
+                    var placements = new Dictionary<Point, Gene>();
+                    foreach(var gene in individual.Genes)
+                    {
+                        foreach(var point in gene.Phenotype().Points)
+                        {
+                            placements[point] = gene;
+                        }
+                    }
+                    // Minimize number of shapes that are adjacent to each other
+                    evals.Add(
+                        -individual.Genes.Sum( g => {
+                            return new HashSet<Gene>(
+                                g.Phenotype().AdjacentPoints
+                                .Where(p => placements.ContainsKey(p))
+                                .Select(p => placements[p])
+                            ).Count();
+                        })
+                    );
+                }
+                return evals;
+            };
             Func<IEnumerable<SolutionGenome>, List<EvalNode<SolutionGenome>>> evaluate = (population) =>
             {
                 evalCounter += population.Count();
@@ -88,59 +146,7 @@ namespace StockCutter
 
                 foreach(var individual in population)
                 {
-                    popFits[individual] = new List<int>();
-                    if (config.Fitness.Length)
-                    {
-                        popFits[individual].Add(stock.Length - individual.SolutionLength);
-                    }
-
-                    if (config.Fitness.Width)
-                    {
-                        popFits[individual].Add(stock.Width - individual.SolutionWidth);
-                    }
-
-                    if (config.Fitness.Cut)
-                    {
-                        var placements = new Dictionary<Point, Gene>();
-                        foreach(var gene in individual.Genes)
-                        {
-                            foreach(var point in gene.Phenotype().Points)
-                            {
-                                placements[point] = gene;
-                            }
-                        }
-                        // Maximizing adjacent points is minimizing cuts
-                        popFits[individual].Add(
-                            individual.Genes.Sum( g => {
-                                return g.Phenotype().AdjacentPoints
-                                    .Where(p => placements.ContainsKey(p))
-                                    .Select(p => placements[p])
-                                    .Count();
-                            })
-                        );
-                    }
-
-                    if (config.Fitness.Adjacents)
-                    {
-                        var placements = new Dictionary<Point, Gene>();
-                        foreach(var gene in individual.Genes)
-                        {
-                            foreach(var point in gene.Phenotype().Points)
-                            {
-                                placements[point] = gene;
-                            }
-                        }
-                        // Minimize number of shapes that are adjacent to each other
-                        popFits[individual].Add(
-                            -individual.Genes.Sum( g => {
-                                return new HashSet<Gene>(
-                                    g.Phenotype().AdjacentPoints
-                                    .Where(p => placements.ContainsKey(p))
-                                    .Select(p => placements[p])
-                                ).Count();
-                            })
-                        );
-                    }
+                    popFits[individual] = evaluateSolution(individual);
                 }
 
                 var fittedPopulation = new List<EvalNode<SolutionGenome>>();
@@ -235,9 +241,18 @@ namespace StockCutter
                     unchangedBest += 1;
                 }
 
-                Console.WriteLine("Evals {0}\tLevels: {1}\tMutations: {2:0.000} {3:0.000} {4:0.000}\tCrossover: {5:0.000}",
+                Console.WriteLine("Evals {0}\tLevels: {1}\tAvg Fitness: {2}\tBest Fitnesss {3}\tMutations: {4:0.000} {5:0.000} {6:0.000}\tCrossover: {7:0.000}",
                     evalCounter,
                     (new HashSet<int>(_evalPopulation.Select(e => e.Fitness))).Count(),
+                    String.Join(",", BestPopulation
+                        .Select(s => evaluateSolution(s))
+                        .Aggregate(new List<int>{0, 0, 0, 0}, (lhs, rhs) => lhs.Zip(rhs, (l, r) => l + r).ToList())
+                        .Select(total => String.Format("{0:0.000}", total / (double)BestPopulation.Count))
+                    ),
+                    String.Join(",", BestPopulation
+                        .Select(s => evaluateSolution(s))
+                        .Aggregate(new List<int>{0, 0, 0, 0}, (lhs, rhs) => lhs.Zip(rhs, (l, r) => Math.Max(l, r)).ToList())
+                    ),
                     BestPopulation.Sum(p => p.RateCreepRandom)        / BestPopulation.Count(),
                     BestPopulation.Sum(p => p.RateRotateRandom)       / BestPopulation.Count(),
                     BestPopulation.Sum(p => p.RateSlideRandom)        / BestPopulation.Count(),
@@ -246,8 +261,8 @@ namespace StockCutter
 
                 bool evalLimitReached = config.Termination.EvalLimit != 0 && config.Termination.EvalLimit <= evalCounter;
                 bool generationLimitReached =
-                    config.Termination.GenerationLimit != 0 && config.Termination.GenerationLimit <= generationCounter;
-                bool unchangedBestReached = config.Termination.UnchangedBestLimit != 0 && config.Termination.UnchangedBestLimit <= unchangedBest;
+                    config.Termination.GenerationLimit != 0 && config.Termination.GenerationLimit < generationCounter;
+                bool unchangedBestReached = config.Termination.UnchangedBestLimit != 0 && config.Termination.UnchangedBestLimit < unchangedBest;
                 return evalLimitReached || generationLimitReached || unchangedBestReached;
             };
 
@@ -426,10 +441,20 @@ namespace StockCutter
                 survive,
                 terminate
             );
-            var newLogData = new List<Tuple<int, float, int>>();
-            foreach (var _population in ea.Solve())
+            var newLogData = new List<Tuple<int, List<double>>>();
+            foreach (var population in ea.Solve())
             {
-                //newLogData.Add(new Tuple<int, float, int>(evalCounter, 0.0, 0));
+                var avg = population
+                    .Select(s => evaluateSolution(s))
+                    .Aggregate(new List<int>{0, 0, 0, 0}, (lhs, rhs) => lhs.Zip(rhs, (l, r) => l + r).ToList())
+                    .Select(total => total / (double)population.Count());
+                var best = population
+                    .Select(s => evaluateSolution(s))
+                    .Aggregate(new List<int>{0, 0, 0, 0}, (lhs, rhs) => lhs.Zip(rhs, (l, r) => Math.Max(l, r)).ToList());
+                var avgBest = avg
+                    .Zip(best, (a, b) => new List<double>(new double[] {a, b}))
+                    .SelectMany(i => i);
+                newLogData.Add(Tuple.Create(evalCounter, avgBest.ToList()));
             }
             logFileData.Add(newLogData);
         }

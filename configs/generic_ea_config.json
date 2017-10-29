@@ -26,8 +26,8 @@
     "slide_random": 0.1
   },
   "terminations": {
-    "eval_limit": 10000,
-    "unchanged_best_limit": 4
+    "eval_limit": 2500,
+    "unchanged_best_limit": 2
   },
   "fitness": {
     "length": true,
