@@ -11,8 +11,8 @@
     "rate_p": 0.8,
     "select_k": 3,
     "replacement": true,
-    "adaptive_crossover": true,
-    "rate_adjacency_crossover": 0.15
+    "adaptive_crossover": false,
+    "rate_adjacency_crossover": 0
   },
   "survival_selection": {
     "selection_weight": "Truncate",
